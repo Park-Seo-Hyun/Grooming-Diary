@@ -20,10 +20,10 @@ class Diary(Base):
     image_url = Column(String(255), nullable=True)
     
     emotion_score = Column(Float, nullable=False)
-    emotion_emoji = Column(CHAR(10), nullable=False)
-    emotion_label = Column(String(20), nullable=True)
+    emotion_emoji = Column(CHAR(30), nullable=False)
+    emotion_label = Column(String(20), nullable=False)
     
-    ai_comment = Column(Text, nullable=True, comment="AI 봇이 일기에 대해 남긴 코멘트") 
+    ai_comment = Column(Text, nullable=False, comment="AI 봇이 일기에 대해 남긴 코멘트") 
     
     created_at = Column(
         DateTime, 
