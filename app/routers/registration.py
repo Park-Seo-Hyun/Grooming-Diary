@@ -5,9 +5,7 @@ from ..models.user import User
 from .. import auth
 from ..schemas import userSchema 
 from ..database import get_db
-from fastapi.security import OAuth2PasswordBearer
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login") 
+# from fastapi.security import OAuth2PasswordBearer
 
 router = APIRouter(
     prefix="/auth", 
@@ -52,11 +50,12 @@ def login(user_credentials: userSchema.UserLogin, db: Session = Depends(get_db))
     if not user or not auth.verify_password(user_credentials.user_pwd, user.user_pwd):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="아이디 또는 비밀번호가 일치하지 않습니다."
+            detail="아이디 또는 비밀번호가 일치하지 않습니다.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     access_token = auth.create_access_token(
-        data={"user_id": user.user_id, "user_name": user.user_name}
+        data={"id": user.id}
     )
     return {
         "message": "로그인 성공",

@@ -13,8 +13,7 @@ class PositiveQuestion(Base):
     
     question_number = Column(
         Integer, 
-        Identity(start=1, increment=1), 
-        unique=True, 
+        Identity(start=1, increment=1),
         nullable=False
     )
     
