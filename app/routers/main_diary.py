@@ -24,13 +24,17 @@ def get_current_active_user(user_id: str = Depends(auth.get_current_user), db: S
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="사용자를 찾을 수 없습니다.")
     return user
 
+## 감정 점수 임계값 설정 (이 값 미만이면 'Neutral'로 처리)
+EMOTION_SCORE_THRESHOLD = 0.60
+
 ## 감정 중요도 가중치 (임시)
 EMOTION_WEIGHTS = {
-    "Happy": 3,
-    "Tender": 1,
-    "Fear": -2,
-    "Angry": -3,
-    "Sad": -4,
+    "Angry": 4,
+    "Fear": 3,
+    "Happy": 2,
+    "Tender": 2,
+    "Sad": 5,
+    "Neutral": 1,
 }
 
 ## helper function
@@ -60,6 +64,63 @@ def create_diary_response(diary: Diary) -> dict:
         "created_at": diary.created_at,
     }
     
+# 전체 일기 조회
+@router.get("/main", response_model=diarySchema.MainPageResponse)
+def get_all_diaries(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    user_id = current_user.id
+    today = date.today()
+    thirty_days = today - timedelta(days=30)
+   
+    ## 감정 점수 계산 용 일기 데이터 조회 (최근 30일 이내 데이터)
+    recent_diaries = db.query(Diary).filter(Diary.user_id == user_id, Diary.diary_date >= thirty_days)\
+        .order_by(Diary.diary_date.desc()).all()
+       
+    total_score = 0
+    total_cnt = len(recent_diaries)
+
+    for diary in recent_diaries:
+        label = diary.emotion_label
+        weight = EMOTION_WEIGHTS.get(label)
+        total_score += weight * diary.emotion_score
+        
+    max_weight = max(EMOTION_WEIGHTS.values())
+    min_weight = min(EMOTION_WEIGHTS.values())
+    
+    ## total 감정 점수
+    if total_cnt > 0:
+        min_possible_score = total_cnt * min_weight
+        max_possible_score = total_cnt * max_weight
+        
+        score_range = max_possible_score - min_possible_score
+        ## 분모 0 방지
+        if score_range == 0:
+            overall_emotion_score = 50.0
+        else:
+            normalized_score = (total_score - min_possible_score) / score_range
+            overall_emotion_score = round(max(0.0, min(1.0, normalized_score)) * 100, 1)
+    else:
+        overall_emotion_score = 0.0
+    
+    ## 달력 표시용 데이터
+    all_diaries = db.query(Diary).filter(Diary.user_id == user_id).order_by(Diary.diary_date.desc()).all()
+
+    calendar_diaries = []
+
+    for entry in all_diaries:
+        calendar_diaries.append(diarySchema.CalendarResponse(
+            id=entry.id,
+            diary_date=entry.diary_date,
+            emotion_emoji=entry.emotion_emoji
+        ))
+        
+    return {
+        "overall_emotion_score": overall_emotion_score,
+        "diaries": calendar_diaries
+    }
+    
 # 일기 Create
 @router.post("/new", response_model=diarySchema.DiaryResponse, status_code=status.HTTP_201_CREATED)
 def create_diary(
@@ -67,9 +128,33 @@ def create_diary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user) ## JWT 인증 적용
 ):
-    analysis_result = nlp_service.get_emotion_analysis(diary_data.content) ## 일기 감정 분석(NLP)
     
-    ai_comment_text = chatbot_service.generate_comment(diary_data.content, analysis_result['emotion_label'])
+    ## NLP/AI봇 실패 시 사용할 기본값 정의
+    analysis_result = {
+        'emotion_score': 0.0,
+        'emotion_emoji': None,
+        'emotion_label': "Neutral"
+    }
+    ai_comment_text = "오늘 너는 여러가지 감정이 섞인 하루를 보냈구나"
+    
+    # FIX: NLP 서비스 예외 처리 및 감정 점수 임계값 적용
+    try:
+        raw_analysis = nlp_service.get_emotion_analysis(diary_data.content)
+        
+        ## 감정 점수가 임계값 미만일 경우, Neutral로 강제 처리 
+        if raw_analysis['emotion_score'] < EMOTION_SCORE_THRESHOLD:
+            analysis_result['emotion_label'] = "Neutral"
+            analysis_result['emotion_emoji'] = "default.png" 
+            analysis_result['emotion_score'] = raw_analysis['emotion_score'] ## 점수는 유지
+        else:
+            analysis_result = raw_analysis
+            
+        ## AI 코멘트 재생성
+        ai_comment_text = chatbot_service.generate_comment(diary_data.content, analysis_result['emotion_label'])
+        
+    except Exception as e:
+        print(f"NLP/Chatbot Service Failed: {e}")
+        ## 실패 시 ai_comment_text와 analysis_result는 기본값 유지
     
     ## DB 객체 생성 및 저장
     new_diary = Diary(
@@ -95,25 +180,6 @@ def create_diary(
     full_data = create_diary_response(new_diary) 
     return diarySchema.DiaryResponse(**full_data)
 
-# # 전체 일기 조회
-# @router.get("/main", response_model=diarySchema.MainPageResponse)
-# def get_all_diaries(
-#     db: Session = Depends(get_db),
-#     current_user: User = Depends(get_current_active_user)
-# ):
-#     ## 모든 일기 데이터 조회
-#     diaries = db.query(Diary).filter(Diary.user_id == current_user.id).order_by(Diary.diary_date.desc()).all()
-    
-#     ## 감정 점수 종합 계산
-#     emotion_counts = {label: 0 for label in EMOTION_WEIGHTS.keys()}
-#     total_weighted_score = 0
-#     max_possible_weight = max(EMOTION_WEIGHTS.values())
-#     min_possible_weight = min(EMOTION_WEIGHTS.values())
-    
-#     calendar_items = []
-    
-    
-
 ## 특정 일기 상세 조회 
 @router.get("/date/{id}", response_model=diarySchema.DiaryDetailResponse)
 def get_diary_detail(
@@ -132,3 +198,83 @@ def get_diary_detail(
 
     full_data = create_diary_response(diary)
     return diarySchema.DiaryDetailResponse(**full_data)
+
+## 특정 일기 수정
+@router.put("/modify/{id}", response_model=diarySchema.DiaryDetailResponse)
+def update_diary(
+    id: str,
+    update_data: diarySchema.DiaryUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    diary_query = db.query(Diary).filter(
+        Diary.user_id == current_user.id,
+        Diary.id == id
+    )
+    diary = diary_query.first()
+    
+    if not diary:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID {id}에 해당하는 일기를 찾을 수 없습니다.")
+    
+    
+    ## NLP/AI봇 실패 시 사용할 기본값 정의
+    analysis_result = {
+        'emotion_score': diary.emotion_score or 0.0,
+        'emotion_emoji': diary.emotion_emoji or None,
+        'emotion_label': diary.emotion_label or "Neutral"
+    }
+    ai_comment_text = diary.ai_comment or "오늘 너는 여러가지 감정이 섞인 하루를 보냈구나"
+    
+    if update_data.content and update_data.content != diary.content:
+        try:
+            raw_analysis = nlp_service.get_emotion_analysis(update_data.content)
+
+            if raw_analysis['emotion_score'] >= EMOTION_SCORE_THRESHOLD:
+                analysis_result = raw_analysis
+            else:
+                analysis_result['emotion_score'] = raw_analysis['emotion_score']
+                analysis_result['emotion_label'] = "Neutral"
+                analysis_result['emotion_emoji'] = "default.png" 
+
+            ## AI 코멘트 재생성
+            ai_comment_text = chatbot_service.generate_comment(update_data.content, analysis_result['emotion_label'])
+
+        except Exception as e:
+            print(f"NLP/Chatbot Service Failed: {e}")
+            ## 실패 시 ai_comment_text와 analysis_result는 기본값 유지
+            
+    update_data_dict = update_data.model_dump(exclude_unset=True)
+    
+    update_payload = {
+        **update_data_dict,
+        "emotion_score": analysis_result['emotion_score'],
+        "emotion_emoji": analysis_result['emotion_emoji'],
+        "emotion_label": analysis_result['emotion_label'],
+        "ai_comment": ai_comment_text,
+    }
+    diary_query.update(update_payload, synchronize_session=False)
+    db.commit()
+    db.refresh(diary)
+    
+    full_data = create_diary_response(diary)
+    return diarySchema.DiaryDetailResponse(**full_data)
+
+## 일기 삭제
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_diary(
+    id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    diary = db.query(Diary).filter(
+        Diary.user_id == current_user.id,
+        Diary.id == id
+    )
+    
+    if not diary.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID {id}에 해당하는 일기를 찾을 수 없거나 삭제 권한이 없습니다.")
+
+    diary.delete(synchronize_session=False)
+    db.commit()
+    
+    return

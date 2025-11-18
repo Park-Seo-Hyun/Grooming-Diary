@@ -12,3 +12,5 @@ uv.lock
 
 # Virtual environments
 venv
+
+backend.egg-info

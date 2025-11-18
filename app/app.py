@@ -1,4 +1,4 @@
-#backend/app/app.py
+# backend/app/app.py
 
 from fastapi import FastAPI
 from .routers import registration, positive_diary, main_diary

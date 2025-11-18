@@ -57,15 +57,11 @@ class CalendarResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        
 ## 달력 main 통합 RESPONSE
 class MainPageResponse(BaseModel):
     overall_emotion_score: float = Field(..., description="총합 감정 점수")
     diaries: List[CalendarResponse] = Field(..., description="달력 표시용")
-        
-# ## 감정 통계
-# class DiaryStatsResponse(BaseModel):
-#     emotion_counts: Dict[str, int] = Field(..., description="감정 레이블별 누적 횟수")
-#     overall_mental_score: float = Field(..., description="가중치 기반 종합 정신 건강 점수 (0-100점)")
         
     
     
