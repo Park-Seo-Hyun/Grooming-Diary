@@ -60,6 +60,7 @@ class CalendarResponse(BaseModel):
         
 ## 달력 main 통합 RESPONSE
 class MainPageResponse(BaseModel):
+    current_date: str = Field(..., description="달력 날짜", examples=["2025-11"])
     overall_emotion_score: float = Field(..., description="총합 감정 점수")
     diaries: List[CalendarResponse] = Field(..., description="달력 표시용")
         

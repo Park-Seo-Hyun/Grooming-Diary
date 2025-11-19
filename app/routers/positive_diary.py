@@ -208,7 +208,7 @@ def get_answer_detail(
     )
 
 ## 특정 긍정일기 수정
-@router.put("/answers/{id}", response_model=positiveSchema.AnswerDetailResponse)
+@router.put("/modify/{id}", response_model=positiveSchema.AnswerDetailResponse)
 def update_answer(
     id: str,
     update_data: positiveSchema.UpdateAnswerCreate,

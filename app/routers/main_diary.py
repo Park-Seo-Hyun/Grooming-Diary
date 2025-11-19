@@ -1,5 +1,5 @@
 # backend/router/main_diary.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Path
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 from typing import List, Dict, Any
@@ -10,6 +10,7 @@ from .. import auth
 from ..schemas import diarySchema, userSchema
 from ..database import get_db
 from ..service import nlp_service, chatbot_service
+import calendar
 
 router = APIRouter(
     prefix="/api/diaries", 
@@ -65,14 +66,24 @@ def create_diary_response(diary: Diary) -> dict:
     }
     
 # 전체 일기 조회
-@router.get("/main", response_model=diarySchema.MainPageResponse)
+@router.get("/main{monthly_year}", response_model=diarySchema.MainPageResponse)
 def get_all_diaries(
+    monthly_year: str = Path(..., description="조회 날짜(YYYY-MM)", examples=["2025-11"]),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     user_id = current_user.id
     today = date.today()
     thirty_days = today - timedelta(days=30)
+    
+    try:
+        current_year = int(monthly_year.split('-')[0])
+        current_month = int(monthly_year.split('-')[1])
+    except:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="날짜 형식이 유효하지 않습니다.(YYYY-MM)")
+    
+    start_of_month = date(current_year, current_month, 1)
+    end_of_month = date(current_year, current_month, calendar.monthrange(current_year, current_month)[1])
    
     ## 감정 점수 계산 용 일기 데이터 조회 (최근 30일 이내 데이터)
     recent_diaries = db.query(Diary).filter(Diary.user_id == user_id, Diary.diary_date >= thirty_days)\
@@ -103,9 +114,13 @@ def get_all_diaries(
             overall_emotion_score = round(max(0.0, min(1.0, normalized_score)) * 100, 1)
     else:
         overall_emotion_score = 0.0
+        
+    
     
     ## 달력 표시용 데이터
-    all_diaries = db.query(Diary).filter(Diary.user_id == user_id).order_by(Diary.diary_date.desc()).all()
+    all_diaries = db.query(Diary).filter(Diary.user_id == user_id,
+                                         Diary.diary_date >= start_of_month,
+                                         Diary.diary_date <= end_of_month).order_by(Diary.diary_date.desc()).all()
 
     calendar_diaries = []
 
@@ -117,6 +132,7 @@ def get_all_diaries(
         ))
         
     return {
+        "current_date": monthly_year,
         "overall_emotion_score": overall_emotion_score,
         "diaries": calendar_diaries
     }
@@ -144,7 +160,7 @@ def create_diary(
         ## 감정 점수가 임계값 미만일 경우, Neutral로 강제 처리 
         if raw_analysis['emotion_score'] < EMOTION_SCORE_THRESHOLD:
             analysis_result['emotion_label'] = "Neutral"
-            analysis_result['emotion_emoji'] = "default.png" 
+            analysis_result['emotion_emoji'] = "/static/emoji/default.png" 
             analysis_result['emotion_score'] = raw_analysis['emotion_score'] ## 점수는 유지
         else:
             analysis_result = raw_analysis
@@ -234,7 +250,7 @@ def update_diary(
             else:
                 analysis_result['emotion_score'] = raw_analysis['emotion_score']
                 analysis_result['emotion_label'] = "Neutral"
-                analysis_result['emotion_emoji'] = "default.png" 
+                analysis_result['emotion_emoji'] = "/static/emoji/default.png" 
 
             ## AI 코멘트 재생성
             ai_comment_text = chatbot_service.generate_comment(update_data.content, analysis_result['emotion_label'])
