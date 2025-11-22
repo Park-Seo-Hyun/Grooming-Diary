@@ -4,6 +4,7 @@ from transformers import AutoTokenizer, BertForSequenceClassification
 import torch
 import torch.nn.functional as F
 import os
+from typing import Dict, Any
 
 MODEL_NAME = "jeonghyeon97/koBERT-Senti5"
 
@@ -46,7 +47,8 @@ def get_emotion_analysis(text: str) -> dict:
     with torch.no_grad():
         outputs = model(**inputs)
         
-    # 확률 계산 (Softmax 적용)
+    ## 확률 계산 (Softmax 적용)
+    # # probabilities: 모든 감정 레이블의 확률 리스트 (e.g., [0.05, 0.10, 0.70, 0.05, 0.10])
     probabilities = F.softmax(outputs.logits, dim=1).squeeze().tolist()
     
     # 가장 높은 확률을 가진 감정의 인덱스 추출
@@ -57,8 +59,13 @@ def get_emotion_analysis(text: str) -> dict:
     emotion_label = EMOTION_LABELS[predicted_label_index][0]
     emotion_emoji = EMOTION_LABELS[predicted_label_index][1]
     
+    overall_emotion_score: Dict[str, float] = {}
+    for i, (label, _) in EMOTION_LABELS.items():
+        overall_emotion_score[label] = probabilities[i]
+    
     return {
         "emotion_label": emotion_label,
         "emotion_emoji": emotion_emoji,
-        "emotion_score": emotion_score
+        "emotion_score": emotion_score,
+        "overall_emotion_score": overall_emotion_score
     }

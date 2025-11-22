@@ -12,6 +12,6 @@ class EmotionStateItem(BaseModel):
 
 ## 월별 데이터 통계
 class MonthlyStateResponse(BaseModel):
-    month_year: str = Field(..., description="조회 날짜(YYYY-MM)", examples=["2025-11"])
+    monthly_year: str = Field(..., description="조회 날짜(YYYY-MM)", examples=["2025-11"])
     diary_cnt: int = Field(..., description="일기 작성 횟수")
     emotion_state: List[EmotionStateItem] = Field(..., description="월별 감정 정보")

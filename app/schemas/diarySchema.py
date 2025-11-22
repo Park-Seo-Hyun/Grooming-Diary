@@ -27,8 +27,9 @@ class DiaryResponse(BaseModel):
     primary_image_url: str = Field(..., description="달력에 표시할 최종 이미지 URL")
     
     emotion_score: float = Field(..., description="감정 점수")
-    emotion_emoji: str = Field(..., max_length=30, description="감정 이모지")
+    emotion_emoji: str = Field(..., max_length=255, description="감정 이모지")
     emotion_label: str = Field(..., description="감정 레이블")
+    overall_emotion_score: Dict[str, float] = Field(..., description="전체 감정 분포")
     
     ai_comment: str = Field(..., max_length=50, description="AI 쳇봇 코멘트")
     
@@ -53,15 +54,16 @@ class DiaryDetailResponse(BaseModel):
 class CalendarResponse(BaseModel):
     id: str = Field(..., description="일기 UUID")
     diary_date: date = Field(..., description="일기 작성 날짜")
-    emotion_emoji: str = Field(..., max_length=30, description="감정 이모지")
+    emotion_emoji: str = Field(..., max_length=255, description="감정 이모지")
     
     class Config:
         from_attributes = True
         
 ## 달력 main 통합 RESPONSE
 class MainPageResponse(BaseModel):
-    current_date: str = Field(..., description="달력 날짜", examples=["2025-11"])
-    overall_emotion_score: float = Field(..., description="총합 감정 점수")
+    monthly_year: str = Field(..., description="달력 날짜", examples=["2025-11"])
+    monthly_name_en: str = Field(..., description="월 영어")
+    user_emotion_score: float = Field(..., description="총합 감정 점수")
     diaries: List[CalendarResponse] = Field(..., description="달력 표시용")
         
     

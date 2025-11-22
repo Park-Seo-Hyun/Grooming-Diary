@@ -67,7 +67,7 @@ def get_monthly_emotion(
             ))
     
     return {
-        "month_year": monthly_year,
+        "monthly_year": monthly_year,
         "diary_cnt": total_diary_cnt,
         "emotion_state": emotion_state
     }

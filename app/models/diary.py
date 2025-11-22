@@ -1,7 +1,7 @@
 #backend/app/models/diary.py
 
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Date, Text, DateTime, Float, ForeignKey
+from sqlalchemy import Column, String, Date, Text, DateTime, Float, ForeignKey, JSON
 from sqlalchemy.dialects.mysql import CHAR
 from sqlalchemy.orm import relationship
 from ..database import Base
@@ -20,8 +20,11 @@ class Diary(Base):
     image_url = Column(String(255), nullable=True)
     
     emotion_score = Column(Float, nullable=False)
-    emotion_emoji = Column(CHAR(30), nullable=False)
+    emotion_emoji = Column(String(255), nullable=False)
     emotion_label = Column(String(20), nullable=False)
+    
+    overall_emotion_score = Column(JSON, nullable=False) 
+
     
     ai_comment = Column(Text, nullable=False, comment="AI 봇이 일기에 대해 남긴 코멘트") 
     

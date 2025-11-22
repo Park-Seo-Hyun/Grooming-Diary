@@ -5,8 +5,8 @@ import os
 
 ## KoGPT2 공감 모델의 파라미터 및 설정 적용
 MODEL_NAME = "dlckdfuf141/empathy-kogpt2"
-MAX_NEW_TOKENS = 60 
-TEMPERATURE = 0.8
+MAX_NEW_TOKENS = 40 
+TEMPERATURE = 0.7
 TOP_P = 0.95
 
 ## 모델 및 토크나이저 로드 (서버 시작 시 1회 로드)
@@ -28,15 +28,13 @@ except Exception as e:
     DEVICE = "cpu"
 
 def generate_comment(content: str, emotion_label: str) -> str:
-    """
-    사용자의 일기 내용과 감정 레이블을 기반으로 공감 메시지를 생성합니다.
-    (따뜻한 심리 상담가 페르소나를 부여)
-    """
+
     
     # 🌟 페르소나 및 지시사항 추가 (프롬프트 구성)
     system_instruction = (
-        "당신은 따뜻하고 공감 능력이 뛰어난 심리 상담가입니다. "
-        "사용자의 일기를 보고, 50자 이내의 짧고 격려가 되는 친구가 보내는 듯한 공감 메시지를 한국어로 작성하세요."
+        f"당신은 따뜻한 심리 상담가입니다. 사용자의 감정({emotion_label})과 일기 내용을 공감하여 자상하게 답변하세요.\n\n"
+        f"일기 내용: {content}\n"
+        f"공감 메시지:"
     )
     
     # KoGPT2 모델 프롬프트 형식: [지시사항]\n\n감정: {emotion_label}\n일기: {content}\n공감 메시지:
@@ -66,6 +64,12 @@ def generate_comment(content: str, emotion_label: str) -> str:
         response = generated_text.split("공감 메시지:")[-1].strip()
         
         # 불필요한 프롬프트 잔여물 제거 및 길이 제한 적용
+        if "\n" in response:
+            response = response.split("\n")[0].strip()
+        if "일기 내용:" in response:
+            response = response.split("일기 내용:")[0].strip()
+            
+        # 길이 제한 적용
         if len(response) > 50:
             return response[:50].strip() + "..."
         

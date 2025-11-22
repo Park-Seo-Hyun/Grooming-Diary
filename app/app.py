@@ -9,6 +9,7 @@ from .routers import registration, positive_diary, main_diary, emotion_graph
 app = FastAPI()
 
 app.mount("/static/emoji", StaticFiles(directory="app/emoji"), name="static_emoji")
+app.mount("/static/images", StaticFiles(directory="app/images"), name="static_images")
 
 app.include_router(registration.router)
 app.include_router(main_diary.router)
