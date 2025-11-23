@@ -1,5 +1,5 @@
 # backend/router/registration.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from ..models.user import User 
 from .. import auth
@@ -12,6 +12,24 @@ router = APIRouter(
     tags=["auth"],
     responses={404:{"description": "Not found"}}
 )
+
+## 아이디 중복 확인
+@router.get("/check_id", response_model=userSchema.IDCheckResponse)
+def check_user_id(
+    user_id: str = Query(..., description="확인할 사용자 로그인 아이디"),
+    db: Session = Depends(get_db)
+):
+    db_user = db.query(User).filter(User.user_id == user_id).first()
+    if db_user:
+        return {
+            "is_available": False,
+            "message": "이미 사용 중인 아이디입니다."
+        }
+    else:
+        return{
+            "is_available": True,
+            "message": "사용 가능한 아이디입니다."
+        }
 
 ## 회원가입 API
 @router.post("/register", response_model=userSchema.UserResponse, status_code=status.HTTP_201_CREATED)

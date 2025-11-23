@@ -10,6 +10,11 @@ class UserCreate(BaseModel):
     user_pwd: str = Field(..., description="사용자가 설정할 비밀번호")
     birth_date: date = Field(..., description="사용자 생년월일 (YYYY-MM-DD 형식)")
     gender: str = Field(..., description="사용자 성별 ('M' 또는 'F')")
+    
+## 아이디 중복 확인
+class IDCheckResponse(BaseModel):
+    is_available: bool = Field(..., description="아이디 사용 가능 여부(True: 사용 가능)")
+    message: str = Field(..., description="결과 메시지")
 
 class UserResponse(BaseModel):
     id: str = Field(..., description="사용자 고유 ID (UUID)")

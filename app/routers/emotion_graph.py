@@ -19,7 +19,8 @@ router = APIRouter(
     responses={404:{"description": "Not found"}}
 )
 
-EMOTION_LABEL = ["Angry", "Fear", "Happy", "Tender", "Sad", "Neutral"]
+EMOTION_LABEL_CHART = ["Angry", "Fear", "Happy", "Tender", "Sad"]
+EMOTION_LABEL = EMOTION_LABEL_CHART + ["Neutral"]
 
 @router.get("/monthly/{monthly_year}", response_model=graphSchema.MonthlyStateResponse)
 def get_monthly_emotion(
@@ -43,6 +44,10 @@ def get_monthly_emotion(
             Diary.diary_date >= start_date,
             Diary.diary_date <= end_date
         ).all()
+    
+    diary_map: Dict[date, Diary] = {diary.diary_date: diary for diary in diaries_in_month}
+    
+    ## 파이 차트 데이터
     total_diary_cnt = len(diaries_in_month)
     
     emotion_cnt = {label: 0 for label in EMOTION_LABEL}
@@ -55,8 +60,7 @@ def get_monthly_emotion(
     if total_diary_cnt > 0:
         for label in EMOTION_LABEL:
             cnt = emotion_cnt[label]
-            if cnt == 0:
-                continue
+            
             percent = round((cnt / total_diary_cnt) * 100, 1)
 
             emotion_state.append(graphSchema.EmotionStateItem(
@@ -65,10 +69,38 @@ def get_monthly_emotion(
                 emotion_cnt=cnt,
                 emotion_percent=percent
             ))
+    emotion_state.sort(key=lambda item: item.emotion_cnt, reverse=True)
+    
+    ## 일별 추이 그래프 데이터
+    daily_emotion_scores: List[graphSchema.DailyEmotionScore] = []
+    
+    current_date = start_date
+    
+    while current_date <= end_date:
+        ## 일기가 없는 날 => 기본 점수: 0.0
+        scores = {label: 0.0 for label in EMOTION_LABEL_CHART}
+        
+        ## 해당 날짜 일기 유무 확인
+        if current_date in diary_map:
+            diary = diary_map[current_date]
+            db_scores: Dict[str, float] = diary.overall_emotion_score
+            
+            for label in EMOTION_LABEL_CHART:
+                scores[label] = round(db_scores.get(label, 0.0), 4)
+
+        daily_emotion_scores.append(graphSchema.DailyEmotionScore(
+            date=current_date.strftime("%Y-%m-%d"),
+            **scores
+        ))
+        
+        current_date += timedelta(days=1)
     
     return {
         "monthly_year": monthly_year,
         "diary_cnt": total_diary_cnt,
-        "emotion_state": emotion_state
+        "emotion_state": emotion_state,
+        "daily_emotion_scores": daily_emotion_scores
     }
+    
+    
     

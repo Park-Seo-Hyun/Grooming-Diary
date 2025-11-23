@@ -17,7 +17,21 @@ from ..database import get_db
 from ..service import nlp_service, chatbot_service
 import calendar
 
-## 파일 경로 지정
+
+## 1. 환경 변수에서 경로를 읽어옵니다. 
+TEMP_DIR_RELATIVE = os.getenv("PYTHON_TEMP_DIR", "app/temp_data")
+
+## 2. 절대 경로를 생성합니다. 
+TEMP_DIR = os.path.join(os.getcwd(), TEMP_DIR_RELATIVE) 
+
+## 3. 폴더 생성 및 환경 변수 설정
+os.makedirs(TEMP_DIR, exist_ok=True)
+
+# Python 프로세스가 임시 파일 저장 경로를 D 드라이브로 인식하도록 환경 변수 설정
+os.environ['TMP'] = TEMP_DIR
+os.environ['TEMP'] = TEMP_DIR
+
+## 파일 경로 지정 : (image 업로드 경로)
 UPLOAD_DIR = os.path.join(os.getcwd(), "app", "images")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -48,7 +62,7 @@ EMOTION_WEIGHTS = {
 }
 
 ## helper function
-def create_diary_response(diary: Diary) -> dict:
+def create_diary_response(diary: Diary, user_name: str) -> dict:
     
     if diary.image_url: ## 사용자가 이미지를 첨부했을 경우
         primary_url = diary.image_url
@@ -61,6 +75,7 @@ def create_diary_response(diary: Diary) -> dict:
     return {
         "id": diary.id,
         "user_id": diary.user_id,
+        "user_name": user_name,
         "diary_date": diary.diary_date,
         "content": diary.content,
         "image_url": diary.image_url,
@@ -245,7 +260,8 @@ def create_diary(
     db.commit()
     db.refresh(new_diary)
     
-    full_data = create_diary_response(new_diary) 
+    full_data = create_diary_response(new_diary, user_name=current_user.user_name) 
+    del full_data['user_name'] 
     return diarySchema.DiaryResponse(**full_data)
 
 ## 특정 일기 상세 조회 
@@ -264,7 +280,7 @@ def get_diary_detail(
     if not diary:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID {id}에 해당하는 일기를 찾을 수 없습니다.")
 
-    full_data = create_diary_response(diary)
+    full_data = create_diary_response(diary, user_name=current_user.user_name)
     return diarySchema.DiaryDetailResponse(**full_data)
 
 ## 특정 일기 수정
@@ -364,7 +380,7 @@ def update_diary(
     db.commit()
     db.refresh(diary)
     
-    full_data = create_diary_response(diary)
+    full_data = create_diary_response(diary, user_name=current_user.user_name)
     return diarySchema.DiaryDetailResponse(**full_data)
 
 ## 일기 삭제
