@@ -1,5 +1,5 @@
 #backend/app/models/user.py
-
+from __future__ import annotations
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, Date, Enum, Text, DateTime
 from sqlalchemy.dialects.mysql import CHAR

@@ -6,7 +6,11 @@ dist/
 wheels/
 *.egg-info
 .env
+
+# Uvicorn lock file
 uv.lock
 
 # Virtual environments
 venv
+
+backend.egg-info
