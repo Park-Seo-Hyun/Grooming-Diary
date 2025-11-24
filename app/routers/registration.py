@@ -2,10 +2,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from ..models.user import User 
+from ..models.diary import Diary 
+from ..models.positiveDiary import PositiveDiary
 from .. import auth
 from ..schemas import userSchema 
 from ..database import get_db
 # from fastapi.security import OAuth2PasswordBearer
+from ..routers.main_diary import get_current_active_user
 
 router = APIRouter(
     prefix="/auth", 
@@ -89,4 +92,30 @@ def login(user_credentials: userSchema.UserLogin, db: Session = Depends(get_db))
 @router.get("/logout", response_model=userSchema.LogoutSuccess)
 def logout():
     return {"message": "로그아웃 성공"}
+
+## 회원탈퇴 
+@router.delete("/unsubscribe", status_code=status.HTTP_204_NO_CONTENT)
+def withdrawal_of_membership(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    user_id = current_user.user_id
+    
+    try:
+        db.query(Diary).filter(Diary.user_id == user_id).delete(synchronize_session=False)
+        db.query(PositiveDiary).filter(PositiveDiary.user_id == user_id).delete(synchronize_session=False)
+        
+        user_delete = db.query(User).filter(User.user_id == user_id)
+        
+        if not user_delete.first():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자를 찾을 수 없습니다.")
+        
+        user_delete.delete(synchronize_session=False)
+        
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"회원 탈퇴 중 데이터베이스 오류 발생: {e}")
+
+    return
     

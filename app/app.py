@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from .routers import registration, positive_diary, main_diary, emotion_graph
+from .routers import registration, positive_diary, main_diary, emotion_graph, mypage
 
 
 
@@ -15,6 +15,7 @@ app.include_router(registration.router)
 app.include_router(main_diary.router)
 app.include_router(positive_diary.router)
 app.include_router(emotion_graph.router)
+app.include_router(mypage.router)
 
 @app.get("/")
 def read_root():

@@ -89,6 +89,40 @@ def create_diary_response(diary: Diary, user_name: str) -> dict:
         
         "created_at": diary.created_at,
     }
+
+## 사용자 감정 점수 계산 helper function  
+def calculate_emotion_score(diaries: List[Diary], weights: Dict[str, int]) -> float:
+
+    total_score = 0
+    total_cnt = len(diaries)
+
+    if total_cnt == 0:
+        return 0.0
+
+    ## 총 점수 계산
+    for diary in diaries:
+        label = diary.emotion_label
+        weight = weights.get(label)
+        if weight is not None:
+            ## diary.emotion_score는 0.0 ~ 1.0 사이의 확률 값
+            total_score += weight * diary.emotion_score
+            
+    max_weight = max(weights.values())
+    min_weight = min(weights.values())
+    
+    ## 정규화
+    min_possible_score = total_cnt * min_weight
+    max_possible_score = total_cnt * max_weight
+    score_range = max_possible_score - min_possible_score
+    
+    if score_range == 0:
+        user_emotion_score = 50.0
+    else:
+        ## 0 ~ 100점 스케일로 정규화
+        normalized_score = (total_score - min_possible_score) / score_range
+        user_emotion_score = round(max(0.0, min(1.0, normalized_score)) * 100, 1)
+        
+    return user_emotion_score
     
 # 전체 일기 조회
 @router.get("/main/{monthly_year}", response_model=diarySchema.MainPageResponse)
@@ -118,34 +152,8 @@ def get_all_diaries(
     recent_diaries = db.query(Diary).filter(Diary.user_id == user_id, Diary.diary_date >= thirty_days)\
         .order_by(Diary.diary_date.desc()).all()
        
-    total_score = 0
-    total_cnt = len(recent_diaries)
+    user_emotion_score = calculate_emotion_score(diaries=recent_diaries, weights=EMOTION_WEIGHTS)
 
-    for diary in recent_diaries:
-        label = diary.emotion_label
-        weight = EMOTION_WEIGHTS.get(label)
-        total_score += weight * diary.emotion_score
-        
-    max_weight = max(EMOTION_WEIGHTS.values())
-    min_weight = min(EMOTION_WEIGHTS.values())
-    
-    ## total 감정 점수
-    if total_cnt > 0:
-        min_possible_score = total_cnt * min_weight
-        max_possible_score = total_cnt * max_weight
-        
-        score_range = max_possible_score - min_possible_score
-        ## 분모 0 방지
-        if score_range == 0:
-            user_emotion_score = 50.0
-        else:
-            normalized_score = (total_score - min_possible_score) / score_range
-            user_emotion_score = round(max(0.0, min(1.0, normalized_score)) * 100, 1)
-    else:
-        user_emotion_score = 0.0
-        
-    
-    
     ## 달력 표시용 데이터
     all_diaries = db.query(Diary).filter(Diary.user_id == user_id,
                                          Diary.diary_date >= start_of_month,
