@@ -55,7 +55,7 @@ class DiaryDetailResponse(BaseModel):
 class CalendarResponse(BaseModel):
     id: str = Field(..., description="일기 UUID")
     diary_date: date = Field(..., description="일기 작성 날짜")
-    emotion_emoji: str = Field(..., max_length=255, description="감정 이모지")
+    emotion_emoji: str = Field(..., description="감정 이모지")
     
     class Config:
         from_attributes = True
