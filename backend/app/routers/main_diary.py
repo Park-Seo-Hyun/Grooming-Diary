@@ -20,6 +20,8 @@ from ..service import nlp_service, chatbot_service
 import calendar
 
 
+
+
 ## 1. 환경 변수에서 경로를 읽어옵니다. 
 TEMP_DIR_RELATIVE = os.getenv("PYTHON_TEMP_DIR", "app/temp_data")
 
