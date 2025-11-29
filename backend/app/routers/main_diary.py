@@ -427,11 +427,17 @@ def delete_diary(
         Diary.user_id == current_user.id,
         Diary.id == id
     )
+    delete_count = db.query(Diary).filter(
+        Diary.user_id == current_user.id,
+        Diary.id == id
+    ).delete(synchronize_session=False) 
     
-    if not diary.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID {id}에 해당하는 일기를 찾을 수 없거나 삭제 권한이 없습니다.")
+    if delete_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=f"ID {id}에 해당하는 일기를 찾을 수 없거나 삭제 권한이 없습니다."
+        )
 
-    diary.delete(synchronize_session=False)
     db.commit()
     
     return
