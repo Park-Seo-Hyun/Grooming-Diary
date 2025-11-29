@@ -68,7 +68,7 @@ except Exception as e:
 def generate_comment(content: str, emotion_label: str) -> str:
     """
     사용자의 일기 내용과 감정 레이블을 바탕으로 파인튜닝된 모델로 공감 메시지를 생성합니다.
-    친한 친구처럼 반말을 사용하며, 응답 품질을 개선했습니다.
+    친한 친구처럼 반말을 사용하며, 응답 품질을 개선했습니다......
     """
     # ⚠️ 모델 로드 실패 시, 기본 에러 메시지를 반환하여 서버 다운을 방지합니다.
     if not LOAD_SUCCESS:
