@@ -8,6 +8,8 @@ import os
 import uuid
 import shutil
 import locale
+import io
+import base64
 
 from ..models.user import User 
 from ..models.diary import Diary 
@@ -34,6 +36,7 @@ os.environ['TEMP'] = TEMP_DIR
 ## 파일 경로 지정 : (image 업로드 경로)
 UPLOAD_DIR = os.path.join(os.getcwd(), "app", "images")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+EMOJI_DIR = os.path.join(os.getcwd(), "app", "emoji")
 
 router = APIRouter(
     prefix="/api/diaries", 
@@ -60,6 +63,27 @@ EMOTION_WEIGHTS = {
     "Tender": 2,
     "Neutral": 1, # 중립
 }
+
+def encode_emoji_to_base64(filename: str) -> str:
+    """
+    이모지 파일명을 받아 파일을 읽고 Base64 문자열로 인코딩합니다.
+    """
+    file_path = os.path.join(EMOJI_DIR, filename)
+    
+    if not os.path.exists(file_path):
+        # 파일이 없을 경우, 오류를 피하기 위해 빈 문자열 반환 (프론트엔드에서 처리)
+        print(f"WARNING: Emoji file not found at {file_path}. Using empty Base64 string.")
+        return "" 
+    
+    try:
+        with open(file_path, "rb") as image_file:
+            # Base64 인코딩
+            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+            # Flutter에서 Image.memory를 위해 데이터 URI 헤더 없이 데이터만 반환
+            return encoded_string
+    except Exception as e:
+        print(f"ERROR: Failed to encode image {filename}: {e}")
+        return ""
 
 ## helper function
 def create_diary_response(diary: Diary, user_name: str) -> dict:
@@ -162,10 +186,11 @@ def get_all_diaries(
     calendar_diaries = []
 
     for entry in all_diaries:
+        base64_data = encode_emoji_to_base64(entry.emotion_emoji)
         calendar_diaries.append(diarySchema.CalendarResponse(
             id=entry.id,
             diary_date=entry.diary_date,
-            emotion_emoji=f"/static/emoji/{entry.emotion_emoji}"
+            emotion_emoji=base64_data
         ))
         
     return {
@@ -273,7 +298,7 @@ def create_diary(
     return diarySchema.DiaryResponse(**full_data)
 
 ## 특정 일기 상세 조회 
-@router.get("/date/{id}", response_model=diarySchema.DiaryDetailResponse)
+@router.get("/detail/{id}", response_model=diarySchema.DiaryDetailResponse)
 def get_diary_detail(
     id: str,
     db: Session = Depends(get_db),
@@ -402,11 +427,17 @@ def delete_diary(
         Diary.user_id == current_user.id,
         Diary.id == id
     )
+    delete_count = db.query(Diary).filter(
+        Diary.user_id == current_user.id,
+        Diary.id == id
+    ).delete(synchronize_session=False) 
     
-    if not diary.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID {id}에 해당하는 일기를 찾을 수 없거나 삭제 권한이 없습니다.")
+    if delete_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=f"ID {id}에 해당하는 일기를 찾을 수 없거나 삭제 권한이 없습니다."
+        )
 
-    diary.delete(synchronize_session=False)
     db.commit()
     
     return
