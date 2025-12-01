@@ -62,13 +62,21 @@ def get_monthly_emotion(
             cnt = emotion_cnt[label]
             
             percent = round((cnt / total_diary_cnt) * 100, 1)
-
-            emotion_state.append(graphSchema.EmotionStateItem(
+            
+            if (label == "Neutral"):
+                emotion_state.append(graphSchema.EmotionStateItem(
                 emotion_label=label,
-                emotion_emoji=f"/static/emoji/{label.lower()}.png",
+                emotion_emoji=f"/static/emoji/default.png",
                 emotion_cnt=cnt,
                 emotion_percent=percent
             ))
+            else:
+                emotion_state.append(graphSchema.EmotionStateItem(
+                    emotion_label=label,
+                    emotion_emoji=f"/static/emoji/{label.lower()}.png",
+                    emotion_cnt=cnt,
+                    emotion_percent=percent
+                ))
     emotion_state.sort(key=lambda item: item.emotion_cnt, reverse=True)
     
     ## 일별 추이 그래프 데이터

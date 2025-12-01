@@ -4,7 +4,7 @@ import os
 from typing import Dict, Any
 
 # ⚠️ 수정: 파인튜닝된 모델의 weights가 저장된 로컬 경로
-FINE_TUNED_MODEL_PATH = r"D:/Grooming/backend/ai_model/fine_tuned_kobert_nlp" 
+FINE_TUNED_MODEL_PATH = r"D:/Grooming/backend/app/ai_model/fine_tuned_kobert_nlp" 
 # NOTE: 실제 사용자 환경에 맞게 위의 경로를 'FINE_TUNED_MODEL_PATH' 변수에 정확히 설정해야 합니다.
 
 # 🌟 파인튜닝 시 사용한 레이블 순서와 동일하게 매핑 (매우 중요)
