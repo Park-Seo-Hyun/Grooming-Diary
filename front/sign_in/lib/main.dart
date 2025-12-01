@@ -86,10 +86,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 350),
+            const SizedBox(height: 270),
             Image.asset(
               'assets/grooming_main.png',
-              height: 250,
+              height: 230,
               fit: BoxFit.contain,
               alignment: Alignment.bottomCenter,
               errorBuilder: (context, error, stackTrace) {

@@ -20,10 +20,10 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              const SizedBox(height: 250),
+              const SizedBox(height: 200),
               Image.asset(
                 'assets/grooming_main.png',
-                height: 250,
+                height: 230,
                 fit: BoxFit.contain,
                 alignment: Alignment.bottomCenter,
                 errorBuilder: (context, error, stackTrace) {

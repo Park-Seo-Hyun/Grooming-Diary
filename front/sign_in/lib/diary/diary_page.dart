@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:convert';
 import '../services/diary_service.dart';
-import 'diary_entry.dart';
+import 'diary_entry_detail.dart';
+import 'diary_detail_page.dart';
 
 class DiaryPage extends StatefulWidget {
   final DateTime selectedDate;
-  final DiaryEntry? initialEntry;
+  final DiaryEntryDetail? initialEntry; // ✅ DiaryEntryDetail 타입
+
   const DiaryPage({super.key, required this.selectedDate, this.initialEntry});
 
   @override
@@ -17,7 +18,6 @@ class DiaryPage extends StatefulWidget {
 class _DiaryPageState extends State<DiaryPage> {
   late TextEditingController _controller;
   File? _selectedImage;
-  String? _existingImageBase64;
   final ImagePicker _picker = ImagePicker();
   static const int maxLength = 100;
 
@@ -25,31 +25,26 @@ class _DiaryPageState extends State<DiaryPage> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialEntry?.text ?? '');
-    _existingImageBase64 = widget.initialEntry?.emoji;
+    _selectedImage = widget.initialEntry?.localImageFile;
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    try {
-      final image = await _picker.pickImage(source: source);
-      if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-          _existingImageBase64 = null;
-        });
-      }
-    } catch (e) {
-      print("이미지 선택 에러: $e");
+    final image = await _picker.pickImage(source: source);
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+      });
     }
   }
 
   Future<void> _saveDiary() async {
     try {
+      final diaryService = DiaryService();
       final fields = {
         'diary_date': widget.selectedDate.toIso8601String(),
         'content': _controller.text,
       };
 
-      final diaryService = DiaryService();
       Map<String, dynamic> result;
 
       if (widget.initialEntry != null) {
@@ -64,17 +59,52 @@ class _DiaryPageState extends State<DiaryPage> {
         result = await diaryService.createDiary(fields, _selectedImage);
       }
 
-      final newEntry = DiaryEntry.fromJson(result);
+      if (result.isEmpty) throw Exception('서버에서 일기 데이터를 받지 못했습니다.');
+
+      final updatedEntry = DiaryEntryDetail.fromJson(result);
+
+      // 로컬 이미지가 있으면 저장
+      if (_selectedImage != null) {
+        updatedEntry.localImageFile = _selectedImage;
+      }
 
       if (!mounted) return;
 
-      Navigator.pop(context, newEntry); // DiaryDetailPage로 반환
+      // 🔹 수정인지 새 작성인지 분기
+      if (widget.initialEntry != null) {
+        // 수정: 이전 화면으로 반환
+        Navigator.pop(context, updatedEntry);
+      } else {
+        // 새 작성: 바로 디테일 페이지로 이동
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DiaryDetailPage(
+              diaryId: updatedEntry.id,
+              onDelete: () => Navigator.pop(context), // 삭제 후 뒤로가기
+              onUpdate: (entry) {}, // 수정 콜백 필요 시
+            ),
+          ),
+        );
+      }
     } catch (e) {
       print("❌ 일기 저장 실패: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("일기 저장 중 오류 발생")));
     }
+  }
+
+  Widget _buildImageWidget() {
+    if (_selectedImage != null) {
+      return Image.file(
+        _selectedImage!,
+        height: 60,
+        width: 60,
+        fit: BoxFit.cover,
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   @override
@@ -159,27 +189,13 @@ class _DiaryPageState extends State<DiaryPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if (_selectedImage != null ||
-                        (_existingImageBase64 != null &&
-                            _existingImageBase64!.isNotEmpty))
+                    if (_selectedImage != null)
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: _selectedImage != null
-                                ? Image.file(
-                                    _selectedImage!,
-                                    height: 60,
-                                    width: 60,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Image.memory(
-                                    base64Decode(_existingImageBase64!),
-                                    height: 60,
-                                    width: 60,
-                                    fit: BoxFit.cover,
-                                  ),
+                            child: _buildImageWidget(),
                           ),
                           Positioned(
                             top: -8,
@@ -187,7 +203,6 @@ class _DiaryPageState extends State<DiaryPage> {
                             child: GestureDetector(
                               onTap: () => setState(() {
                                 _selectedImage = null;
-                                _existingImageBase64 = null;
                               }),
                               child: const CircleAvatar(
                                 radius: 12,

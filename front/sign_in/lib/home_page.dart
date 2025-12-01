@@ -115,7 +115,7 @@ class _HomePageState extends State<HomePage> {
                 final index = diaries.indexWhere(
                   (d) => d.id == updatedEntry.id,
                 );
-                if (index != -1) diaries[index] = updatedEntry;
+                if (index != -1) diaries[index] = updatedEntry as DiaryEntry;
               });
             },
           ),

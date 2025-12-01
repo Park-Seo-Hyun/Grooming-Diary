@@ -139,13 +139,17 @@ class DiaryService {
 
   // 일기 삭제
   Future<bool> deleteDiary(String id) async {
-    final url = Uri.parse('$baseUrl/api/diaries/delete/$id');
+    final url = Uri.parse('$baseUrl/api/diaries/$id');
     final headers = await _getHeaders();
-    final response = await http.delete(url, headers: headers);
-    if (response.statusCode == 200) return true;
 
-    final errorBody = utf8.decode(response.bodyBytes);
-    print('⚠️ deleteDiary 실패 (${response.statusCode}): $errorBody');
+    final response = await http.delete(url, headers: headers);
+
+    // 200 또는 204 모두 성공으로 처리
+    if (response.statusCode == 200 || response.statusCode == 204) return true;
+
+    print(
+      '⚠️ deleteDiary 실패 (${response.statusCode}): ${utf8.decode(response.bodyBytes)}',
+    );
     return false;
   }
 }

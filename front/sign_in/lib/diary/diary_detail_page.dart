@@ -1,14 +1,14 @@
-// diary_detail_page.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'diary_entry.dart';
 import 'diary_page.dart';
 import '../services/diary_service.dart';
+import 'dart:io';
+import 'diary_entry_detail.dart';
 
 class DiaryDetailPage extends StatefulWidget {
   final String diaryId;
   final VoidCallback onDelete;
-  final Function(DiaryEntry)? onUpdate;
+  final Function(DiaryEntryDetail)? onUpdate;
 
   const DiaryDetailPage({
     super.key,
@@ -23,10 +23,7 @@ class DiaryDetailPage extends StatefulWidget {
 
 class _DiaryDetailPageState extends State<DiaryDetailPage> {
   final DiaryService _diaryService = DiaryService();
-
-  bool isLiked = false;
-  bool isBookmarked = false;
-  DiaryEntry? _entry;
+  DiaryEntryDetail? _entry;
   bool _loading = true;
   bool _error = false;
 
@@ -43,11 +40,8 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
     });
 
     try {
-      print("🔍 DiaryDetailPage에서 요청 ID: ${widget.diaryId}");
-
       final data = await _diaryService.getDiaryById(widget.diaryId);
-
-      final entry = DiaryEntry.fromJson(data);
+      final entry = DiaryEntryDetail.fromJson(data);
 
       setState(() {
         _entry = entry;
@@ -62,19 +56,33 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
     }
   }
 
-  // 🔥 URL 기반 이미지 로드
-  Widget _buildImage(String? imageUrl) {
-    if (imageUrl == null || imageUrl.isEmpty) {
-      return const SizedBox(height: 120, child: Center(child: Text("이미지 없음")));
+  Widget _buildImage() {
+    // 1️⃣ 로컬 이미지가 있으면 무조건 표시
+    if (_entry?.localImageFile != null) {
+      return Image.file(
+        _entry!.localImageFile!,
+        height: 150,
+        fit: BoxFit.cover,
+      );
     }
 
+    // 2️⃣ 서버 이미지가 없으면 "이미지 없음"
+    if (_entry?.imageUrl == null || _entry!.imageUrl!.isEmpty) {
+      return const SizedBox(height: 150, child: Center(child: Text("이미지 없음")));
+    }
+
+    // 3️⃣ 서버 URL + 캐시 무시 쿼리 추가
+    final fullUrl = _entry!.imageUrl!.startsWith("http")
+        ? "${_entry!.imageUrl}?v=${DateTime.now().millisecondsSinceEpoch}"
+        : "${_diaryService.baseUrl}${_entry!.imageUrl}?v=${DateTime.now().millisecondsSinceEpoch}";
+
     return Image.network(
-      imageUrl,
+      fullUrl,
       height: 150,
-      fit: BoxFit.contain,
+      fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
         return const SizedBox(
-          height: 120,
+          height: 150,
           child: Center(child: Text("이미지 로드 실패")),
         );
       },
@@ -112,7 +120,6 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 날짜
               Text(
                 DateFormat('yyyy.MM.dd').format(_entry!.date),
                 textAlign: TextAlign.center,
@@ -124,8 +131,6 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // 삭제/수정 버튼
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -135,7 +140,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                         context: context,
                         barrierDismissible: false,
                         builder: (context) => AlertDialog(
-                          title: const Text('일기를 삭제하실 건가요?'),
+                          title: const Text('일기를 삭제하시겠습니까?'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, true),
@@ -150,8 +155,24 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                       );
 
                       if (confirm == true) {
-                        widget.onDelete();
-                        Navigator.pop(context);
+                        try {
+                          print('Deleting diary with id: ${widget.diaryId}');
+                          final success = await _diaryService.deleteDiary(
+                            widget.diaryId,
+                          );
+                          if (success) {
+                            widget.onDelete();
+                            Navigator.pop(context); // 삭제 후 뒤로
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('삭제 중 오류가 발생했습니다.')),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('삭제 중 오류: $e')),
+                          );
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -160,10 +181,11 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                     ),
                     child: const Text('삭제'),
                   ),
+
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () async {
-                      final updated = await Navigator.push<DiaryEntry>(
+                      final updated = await Navigator.push<DiaryEntryDetail?>(
                         context,
                         MaterialPageRoute(
                           builder: (_) => DiaryPage(
@@ -175,7 +197,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
 
                       if (updated != null) {
                         setState(() {
-                          _entry = updated;
+                          _entry = updated; // localImageFile 포함 갱신
                         });
                         if (widget.onUpdate != null) widget.onUpdate!(updated);
                       }
@@ -189,47 +211,8 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // 사진(URL)
-              Center(child: _buildImage(_entry!.emoji)),
-
+              Center(child: _buildImage()),
               const SizedBox(height: 20),
-
-              // 좋아요/북마크
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => setState(() => isLiked = !isLiked),
-                        child: Icon(
-                          isLiked ? Icons.favorite : Icons.favorite_outline,
-                          color: isLiked ? Colors.red : Colors.grey,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      const Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        color: Colors.grey,
-                        size: 28,
-                      ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: () => setState(() => isBookmarked = !isBookmarked),
-                    child: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isBookmarked ? Colors.blue : Colors.grey,
-                      size: 28,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // 사용자 + 내용
               Text.rich(
                 TextSpan(
                   children: [
@@ -242,7 +225,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                         color: Colors.black,
                       ),
                     ),
-                    if (_entry!.text != null)
+                    if (_entry!.text != null && _entry!.text!.isNotEmpty)
                       TextSpan(
                         text: _entry!.text!,
                         style: const TextStyle(
@@ -254,10 +237,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // AI 코멘트
               if (_entry!.aiComment != null && _entry!.aiComment!.isNotEmpty)
                 Container(
                   width: double.infinity,
