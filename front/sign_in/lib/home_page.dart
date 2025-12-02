@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'diary/diary_entry.dart'; // 경로 확인 필요
 import 'diary/diary_page.dart';
 import 'diary/diary_detail_page.dart';
-import 'graph_page.dart';
+import 'graph/graph_page.dart';
 import 'write_page.dart';
 import 'my_page.dart';
 import 'navbar.dart';
@@ -306,6 +306,9 @@ class _HomePageState extends State<HomePage> {
       days.add(day);
     }
 
+    // ✅ 현재 년-월 문자열 미리 생성
+    final String currentYearMonth = DateFormat('yyyy-MM').format(_focusedDay);
+
     List<Widget> pages = [
       SingleChildScrollView(
         child: Column(
@@ -527,7 +530,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      const GraphPage(),
+      GraphPage(initialYearMonth: currentYearMonth), // ✅ 수정 완료
       WritePage(),
       const MyPage(),
     ];
