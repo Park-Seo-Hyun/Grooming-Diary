@@ -65,6 +65,7 @@ class DailyEmotionScore {
     required this.fear,
     required this.happy,
     required this.tender,
+
     required this.sad,
   });
 

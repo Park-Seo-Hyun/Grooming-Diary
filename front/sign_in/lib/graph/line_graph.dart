@@ -16,19 +16,22 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
 
   final emotions = ['happy', 'sad', 'angry', 'fear', 'tender'];
   final colors = {
-    'happy': Colors.yellow,
-    'sad': Colors.blue,
-    'angry': Colors.red,
-    'fear': Colors.purple,
-    'tender': Colors.green,
+    'happy': Color(0xFFFFAEAE),
+    'sad': Color(0xFF5A9AFF),
+    'angry': Color(0xFFBB79DF),
+    'fear': Color(0xFF51D383),
+    'tender': Color(0xFFF8F815),
+    'neutral': Color(0xFFFFBB8A),
   };
 
-  int initialPage = 1000; // 무한 스크롤 느낌
   int get pageCount => emotions.length + 1;
+
+  late int initialPage;
 
   @override
   void initState() {
     super.initState();
+    initialPage = 1000 - (1000 % pageCount);
     _pageController = PageController(initialPage: initialPage);
   }
 
@@ -42,12 +45,11 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
   Widget build(BuildContext context) {
     final today = DateTime.now();
 
-    // 오늘 이후 날짜 제거
+    // 오늘 이후 날짜 제외
     final filteredScores = widget.dailyEmotionScores
         .where((e) => !e.date.isAfter(today))
         .toList();
 
-    // 데이터가 없으면 빈 컨테이너 반환
     if (filteredScores.isEmpty) {
       return const SizedBox(
         height: 300,
@@ -55,21 +57,29 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
       );
     }
 
+    // X축 전체 날짜 (1일부터 말일까지)
+    final monthDays = List<int>.generate(
+      widget.dailyEmotionScores.last.date.day,
+      (i) => i,
+    );
+
     return SizedBox(
       height: 300,
+      width: double.infinity,
       child: PageView.builder(
         controller: _pageController,
         itemBuilder: (context, index) {
           final pageIndex = index % pageCount;
 
           if (pageIndex == 0) {
-            return _buildCombinedGraph(filteredScores);
+            return _buildCombinedGraph(filteredScores, monthDays);
           } else {
             final emotion = emotions[pageIndex - 1];
             return _buildSingleEmotionGraph(
               emotion,
               colors[emotion]!,
               filteredScores,
+              monthDays,
             );
           }
         },
@@ -77,113 +87,56 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
     );
   }
 
-  Widget _buildCombinedGraph(List<DailyEmotionScore> scores) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: LineChart(
-        LineChartData(
-          minX: 0,
-          maxX: (scores.length - 1).toDouble(),
-          clipData: FlClipData.all(),
-          minY: 0,
-          maxY: 1,
-          gridData: FlGridData(
-            show: true,
-            horizontalInterval: 0.25,
-            getDrawingHorizontalLine: (value) =>
-                FlLine(color: Colors.grey.withOpacity(0.3), strokeWidth: 0.5),
-          ),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 0.25,
-                getTitlesWidget: (value, meta) => Text(
-                  (value * 100).toStringAsFixed(0) + '%',
-                  style: const TextStyle(fontSize: 10),
-                ),
-              ),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 1,
-                getTitlesWidget: (value, meta) {
-                  int index = value.toInt();
-                  if (index < 0 || index >= scores.length)
-                    return const SizedBox.shrink();
-                  return Text(
-                    (index + 1).toString(),
-                    style: const TextStyle(fontSize: 10),
-                  );
-                },
-              ),
-            ),
-          ),
-          borderData: FlBorderData(
-            show: true,
-            border: const Border(
-              bottom: BorderSide(color: Colors.grey, width: 1),
-              left: BorderSide(color: Colors.grey, width: 1),
-              right: BorderSide(color: Colors.transparent),
-              top: BorderSide(color: Colors.transparent),
-            ),
-          ),
-          lineBarsData: emotions.map((emotion) {
-            return LineChartBarData(
-              spots: scores
-                  .asMap()
-                  .entries
-                  .map(
-                    (e) => FlSpot(
-                      // x값 안전하게 제한
-                      e.key.toDouble().clamp(0, (scores.length - 1).toDouble()),
-                      getEmotionValue(e.value, emotion),
-                    ),
-                  )
-                  .toList(),
-              isCurved: true,
-              color: colors[emotion]!,
-              barWidth: 2,
-              dotData: FlDotData(show: false),
-              belowBarData: BarAreaData(show: false),
-              preventCurveOverShooting: true, // 곡선이 x축 넘어가는 것 방지
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSingleEmotionGraph(
-    String emotion,
-    Color color,
+  Widget _buildCombinedGraph(
     List<DailyEmotionScore> scores,
+    List<int> monthDays,
   ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            emotion.toUpperCase(),
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(height: 8),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text(
+            "전체",
+            style: TextStyle(
+              color: Color(0xFF929292),
+              fontFamily: 'GyeonggiTitle',
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 4),
           Expanded(
             child: LineChart(
               LineChartData(
                 minX: 0,
-                maxX: (scores.length - 1).toDouble(),
-                clipData: FlClipData.all(),
+                maxX: (monthDays.length - 1).toDouble(),
                 minY: 0,
                 maxY: 1,
+                clipData: FlClipData.all(),
                 gridData: FlGridData(
                   show: true,
                   horizontalInterval: 0.25,
+                  drawVerticalLine: true,
                   getDrawingHorizontalLine: (value) => FlLine(
                     color: Colors.grey.withOpacity(0.3),
                     strokeWidth: 0.5,
+                    dashArray: [4, 4],
+                  ),
+                  getDrawingVerticalLine: (value) => FlLine(
+                    color: Colors.grey.withOpacity(0.3),
+                    strokeWidth: 0.5,
+                    dashArray: [4, 4],
                   ),
                 ),
                 titlesData: FlTitlesData(
@@ -200,17 +153,158 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 1,
+                      interval: 5,
                       getTitlesWidget: (value, meta) {
-                        int index = value.toInt();
-                        if (index < 0 || index >= scores.length)
+                        int idx = value.toInt();
+                        if (idx < 0 || idx >= monthDays.length) {
                           return const SizedBox.shrink();
+                        }
                         return Text(
-                          (index + 1).toString(),
+                          monthDays[idx].toString(),
                           style: const TextStyle(fontSize: 10),
                         );
                       },
                     ),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: const Border(
+                    bottom: BorderSide(color: Colors.grey, width: 1),
+                    left: BorderSide(color: Colors.grey, width: 1),
+                    right: BorderSide(color: Colors.transparent),
+                    top: BorderSide(color: Colors.transparent),
+                  ),
+                ),
+                lineBarsData: emotions.map((emotion) {
+                  final emotionSpots = scores
+                      .asMap()
+                      .entries
+                      .map(
+                        (e) => FlSpot(
+                          e.value.date.day - 1.toDouble(),
+                          getEmotionValue(e.value, emotion),
+                        ),
+                      )
+                      .toList();
+
+                  return LineChartBarData(
+                    spots: emotionSpots,
+                    isCurved: true,
+                    color: colors[emotion]!,
+                    barWidth: 2,
+                    dotData: FlDotData(show: false),
+                    belowBarData: BarAreaData(show: false),
+                    preventCurveOverShooting: true,
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleEmotionGraph(
+    String emotion,
+    Color color,
+    List<DailyEmotionScore> scores,
+    List<int> monthDays,
+  ) {
+    final emotionKorean = {
+      'happy': '행복',
+      'sad': '슬픔',
+      'angry': '화남',
+      'fear': '두려움',
+      'tender': '불안',
+    };
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            emotionKorean[emotion] ?? emotion,
+            style: const TextStyle(
+              color: Color(0xFF929292),
+              fontFamily: 'GyeonggiTitle',
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: LineChart(
+              LineChartData(
+                minX: 0,
+                maxX: (monthDays.length - 1).toDouble(),
+                minY: 0,
+                maxY: 1,
+                clipData: FlClipData.all(),
+                gridData: FlGridData(
+                  show: true,
+                  horizontalInterval: 0.25,
+                  drawVerticalLine: true,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withOpacity(0.5),
+                    strokeWidth: 0.7,
+                    dashArray: [4, 4],
+                  ),
+                  getDrawingVerticalLine: (value) => FlLine(
+                    color: Colors.grey.withOpacity(0.5),
+                    strokeWidth: 0.7,
+                    dashArray: [4, 4],
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 0.25,
+                      getTitlesWidget: (value, meta) => Text(
+                        value.toStringAsFixed(2),
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 5,
+                      getTitlesWidget: (value, meta) {
+                        int idx = value.toInt();
+                        if (idx < 0 || idx >= monthDays.length)
+                          return const SizedBox.shrink();
+                        return Text(
+                          monthDays[idx].toString(),
+                          style: const TextStyle(fontSize: 10),
+                        );
+                      },
+                    ),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
                   ),
                 ),
                 borderData: FlBorderData(
@@ -225,21 +319,17 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                 lineBarsData: [
                   LineChartBarData(
                     spots: scores
-                        .asMap()
-                        .entries
+                        .where((e) => !e.date.isAfter(DateTime.now()))
                         .map(
                           (e) => FlSpot(
-                            e.key.toDouble().clamp(
-                              0,
-                              (scores.length - 1).toDouble(),
-                            ),
-                            getEmotionValue(e.value, emotion), // 선택한 감정만
+                            e.date.day - 1.toDouble(),
+                            getEmotionValue(e, emotion),
                           ),
                         )
                         .toList(),
                     isCurved: true,
                     curveSmoothness: 0.7,
-                    color: color, // 선택한 감정 색상
+                    color: color,
                     barWidth: 2,
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(show: false),
