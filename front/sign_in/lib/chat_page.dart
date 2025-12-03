@@ -103,7 +103,7 @@ class _ChatPageState extends State<ChatPage> {
                   color: Color(0xFF1F74F8),
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 5),
 
               // --- 내용 ---
               const Text(
@@ -111,7 +111,7 @@ class _ChatPageState extends State<ChatPage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Pretendard',
-                  fontSize: 16,
+                  fontSize: 13,
                   color: Color(0xFF1F74F8),
                 ),
               ),
@@ -217,7 +217,7 @@ class _ChatPageState extends State<ChatPage> {
                 text,
                 softWrap: true,
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 15,
                   color: const Color(0xFF626262),
                   fontFamily: isQuestion
                       ? 'GyeonggiTitle' // 질문 폰트
@@ -270,7 +270,7 @@ class _ChatPageState extends State<ChatPage> {
                 maxLength: 50,
                 style: const TextStyle(
                   fontFamily: 'GyeonggiBatang',
-                  fontSize: 20,
+                  fontSize: 15,
                   color: Color(0xFF626262),
                 ),
                 decoration: const InputDecoration(
@@ -278,7 +278,7 @@ class _ChatPageState extends State<ChatPage> {
                   hintStyle: TextStyle(
                     color: Color(0xFFAAA7A7),
                     fontFamily: 'GyeonggiBatang',
-                    fontSize: 18,
+                    fontSize: 15,
                   ),
                   border: InputBorder.none,
                   counterText: '',
@@ -343,7 +343,7 @@ class _ChatPageState extends State<ChatPage> {
           ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1.0),
-            child: Container(color: const Color(0xFFEEEEEE), height: 7.0),
+            child: Container(color: const Color(0xFFEEEEEE), height: 5.0),
           ),
           elevation: 0.0,
         ),
@@ -370,7 +370,7 @@ class _ChatPageState extends State<ChatPage> {
                       Text(
                         "      #${widget.questionNumber.toString().padLeft(2, '0')}번째 질문",
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 15,
                           color: Color(0xFF626262),
                           fontFamily: 'GyeonggiTitle',
                           fontWeight: FontWeight.bold,
@@ -401,13 +401,13 @@ class _ChatPageState extends State<ChatPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF5A9AFF),
                                 foregroundColor: Colors.white,
-                                minimumSize: const Size(80, 36),
+                                minimumSize: const Size(70, 30),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 textStyle: const TextStyle(
                                   fontFamily: 'gyeonggiTitle',
-                                  fontSize: 22,
+                                  fontSize: 18,
                                 ),
                               ),
                             ),
@@ -431,13 +431,13 @@ class _ChatPageState extends State<ChatPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF5A9AFF),
                                 foregroundColor: Colors.white,
-                                minimumSize: const Size(80, 36),
+                                minimumSize: const Size(70, 30),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 textStyle: const TextStyle(
                                   fontFamily: 'gyeonggiTitle',
-                                  fontSize: 22,
+                                  fontSize: 18,
                                 ),
                               ),
                             ),

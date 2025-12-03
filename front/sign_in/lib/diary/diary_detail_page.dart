@@ -26,6 +26,8 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
   DiaryEntryDetail? _entry;
   bool _loading = true;
   bool _error = false;
+  bool isLiked = false;
+  bool isBookmarked = false;
 
   @override
   void initState() {
@@ -57,35 +59,47 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
   }
 
   Widget _buildImage() {
-    // 1️⃣ 로컬 이미지가 있으면 무조건 표시
+    // 1️⃣ 로컬 이미지가 있으면 비율 유지하며 표시
     if (_entry?.localImageFile != null) {
-      return Image.file(
-        _entry!.localImageFile!,
-        height: 150,
-        fit: BoxFit.cover,
+      return ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: 500, // 최대 가로
+          maxHeight: 280, // 최대 세로
+        ),
+        child: Image.file(
+          _entry!.localImageFile!,
+          fit: BoxFit.contain, // 비율 유지, 잘리지 않음
+        ),
       );
     }
 
     // 2️⃣ 서버 이미지가 없으면 "이미지 없음"
     if (_entry?.imageUrl == null || _entry!.imageUrl!.isEmpty) {
-      return const SizedBox(height: 150, child: Center(child: Text("이미지 없음")));
+      return const SizedBox(
+        width: 500,
+        height: 300,
+        child: Center(child: Text("이미지 없음")),
+      );
     }
 
     // 3️⃣ 서버 URL + 캐시 무시 쿼리 추가
     final fullUrl = _entry!.imageUrl!.startsWith("http")
-        ? "${_entry!.imageUrl}?v=${DateTime.now().millisecondsSinceEpoch}"
-        : "${_diaryService.baseUrl}${_entry!.imageUrl}?v=${DateTime.now().millisecondsSinceEpoch}";
+        ? _entry!.imageUrl!
+        : "${_diaryService.baseUrl}${_entry!.imageUrl}";
 
-    return Image.network(
-      fullUrl,
-      height: 150,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return const SizedBox(
-          height: 150,
-          child: Center(child: Text("이미지 로드 실패")),
-        );
-      },
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 500, maxHeight: 300),
+      child: Image.network(
+        fullUrl,
+        fit: BoxFit.contain, // 비율 유지
+        errorBuilder: (context, error, stackTrace) {
+          return const SizedBox(
+            width: 500,
+            height: 300,
+            child: Center(child: Text("이미지 로드 실패")),
+          );
+        },
+      ),
     );
   }
 
@@ -111,7 +125,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
         title: SizedBox(height: 60, child: Image.asset('assets/cloud.png')),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(7.0),
-          child: Divider(color: Color(0xFFEEEEEE), thickness: 7),
+          child: Divider(color: Color(0xFFEEEEEE), thickness: 5),
         ),
       ),
       body: SingleChildScrollView(
@@ -178,6 +192,11 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF5A9AFF),
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ), // 둥글기
+                      elevation: 5, // 그림자
+                      shadowColor: Colors.black.withOpacity(0.5), // 그림자 색
                     ),
                     child: const Text('삭제'),
                   ),
@@ -205,14 +224,81 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF5A9AFF),
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ), // 둥글기
+                      elevation: 5, // 그림자
+                      shadowColor: Colors.black.withOpacity(0.5), // 그림자 색
                     ),
+
                     child: const Text('수정'),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
               Center(child: _buildImage()),
-              const SizedBox(height: 20),
+
+              // 1️⃣ _DiaryDetailPageState 안에 상태 변수 추가
+
+              // 2️⃣ Center(child: _buildImage()), 아래와 const SizedBox(height: 20), 사이에 Row 추가
+              const SizedBox(height: 0), // 사진과 아이콘 사이 간격
+              SizedBox(
+                width: double.infinity,
+                height: 40, // 아이콘 영역 높이
+                child: Stack(
+                  children: [
+                    // 하트
+                    Positioned(
+                      top: 5, // 위쪽 간격
+                      left: -7, // 왼쪽 간격
+                      child: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            isLiked = !isLiked;
+                          });
+                        },
+                        icon: Icon(
+                          isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: isLiked ? Colors.red : Colors.grey,
+                        ),
+                      ),
+                    ),
+                    // 말풍선
+                    Positioned(
+                      top: 5,
+                      left: 40, // 하트와 간격
+                      child: IconButton(
+                        onPressed: () {
+                          // 말풍선 색 변경 없음
+                        },
+                        icon: const Icon(
+                          Icons.chat_bubble_outline,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    // 북마크
+                    Positioned(
+                      top: 5,
+                      right: -10, // 오른쪽 끝에서 간격
+                      child: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            isBookmarked = !isBookmarked;
+                          });
+                        },
+                        icon: Icon(
+                          isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                          color: isBookmarked ? Colors.blue : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20), // 기존 여백 유지
+
               Text.rich(
                 TextSpan(
                   children: [
@@ -220,7 +306,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                       text: '${_entry!.userName} ',
                       style: const TextStyle(
                         fontFamily: 'GyeonggiTitle',
-                        fontSize: 20,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
@@ -230,14 +316,28 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                         text: _entry!.text!,
                         style: const TextStyle(
                           fontFamily: 'GyeonggiBatang',
-                          fontSize: 18,
+                          fontSize: 15,
                           color: Color(0xFF626262),
                         ),
                       ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 25),
+              SizedBox(
+                child: Text.rich(
+                  TextSpan(
+                    text: '댓글 1개',
+                    style: const TextStyle(
+                      fontFamily: 'GyeonggiBatang',
+                      fontSize: 12, // 가독성 있게 조정
+                      color: Color(0xFF626262),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 22),
               if (_entry!.aiComment != null && _entry!.aiComment!.isNotEmpty)
                 Container(
                   width: double.infinity,
@@ -246,14 +346,16 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                     color: const Color(0xFFE9F0FB),
                     borderRadius: BorderRadius.circular(12),
                   ),
+
                   child: Text.rich(
                     TextSpan(
                       children: [
                         const TextSpan(
                           text: 'AI봇\n',
+
                           style: TextStyle(
                             fontFamily: 'GyeonggiBatang',
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                           ),
@@ -262,7 +364,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                           text: _entry!.aiComment!,
                           style: const TextStyle(
                             fontFamily: 'GyeonggiBatang',
-                            fontSize: 16,
+                            fontSize: 14,
                             color: Color(0xFF626262),
                           ),
                         ),

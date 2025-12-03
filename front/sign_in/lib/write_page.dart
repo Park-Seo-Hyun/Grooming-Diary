@@ -105,6 +105,7 @@ class _WritePageState extends State<WritePage> {
         fontSize: 17,
         color: Color(0xFF1A6DFF),
         fontWeight: FontWeight.bold,
+        fontStyle: FontStyle.italic,
       ),
     );
 
@@ -115,13 +116,14 @@ class _WritePageState extends State<WritePage> {
         fontSize: 22,
         color: Color(0xFF1A6DFF),
         fontWeight: FontWeight.bold,
+        fontStyle: FontStyle.italic,
       ),
     );
 
     TextStyle textStyle = const TextStyle(
       fontFamily: 'GyeonggiBatang',
-      fontSize: 17,
-      color: Colors.black87,
+      fontSize: 15,
+      color: Color(0xFF434343),
     );
 
     final numberPainter = TextPainter(
@@ -177,67 +179,57 @@ class _WritePageState extends State<WritePage> {
   Widget build(BuildContext context) {
     final maxWidth = MediaQuery.of(context).size.width - 55;
 
-    return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 25),
-          const Center(
-            child: Text(
-              "긍정 이야기",
-              style: TextStyle(
-                fontFamily: 'GyeonggiBatang',
-                fontSize: 32,
-                color: Color(0xFF1A6DFF),
-              ),
-            ),
-          ),
-          const SizedBox(height: 40),
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    children: [
-                      if (todayQuestion != null)
-                        GestureDetector(
-                          onTap: () => openChat(todayQuestion!, mode: "write"),
-                          child: buildQuestionLine(
-                            todayQuestion!['question_number'] ?? 0,
-                            todayQuestion!['text'] ?? '',
-                            maxWidth,
-                          ),
-                        ),
-                      const SizedBox(height: 30),
-                      ...pastAnswers.map(
-                        (answer) => Container(
-                          margin: const EdgeInsets.symmetric(vertical: 30),
-                          child: GestureDetector(
-                            onTap: () => openChat(answer, mode: "view"),
-                            child: buildQuestionLine(
-                              answer['question_number'] ?? 0,
-                              answer['text'] ?? '',
-                              maxWidth,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      if (todayQuestion == null && pastAnswers.isEmpty)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Text(
-                              '질문이 없습니다.',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ),
-                        ),
-                    ],
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Center(
+                  child: Text(
+                    "긍정 이야기",
+                    style: TextStyle(
+                      fontFamily: 'GyeonggiBatang',
+                      fontSize: 32,
+                      color: Color(0xFF1A6DFF),
+                    ),
                   ),
-          ),
-        ],
-      ),
-    );
+                ),
+                const SizedBox(height: 40),
+                if (todayQuestion != null)
+                  GestureDetector(
+                    onTap: () => openChat(todayQuestion!, mode: "write"),
+                    child: buildQuestionLine(
+                      todayQuestion!['question_number'] ?? 0,
+                      todayQuestion!['text'] ?? '',
+                      maxWidth,
+                    ),
+                  ),
+                const SizedBox(height: 25),
+                ...pastAnswers.map(
+                  (answer) => Container(
+                    margin: const EdgeInsets.symmetric(vertical: 20),
+                    child: GestureDetector(
+                      onTap: () => openChat(answer, mode: "view"),
+                      child: buildQuestionLine(
+                        answer['question_number'] ?? 0,
+                        answer['text'] ?? '',
+                        maxWidth,
+                      ),
+                    ),
+                  ),
+                ),
+                if (todayQuestion == null && pastAnswers.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('질문이 없습니다.', style: TextStyle(fontSize: 18)),
+                    ),
+                  ),
+                const SizedBox(height: 50),
+              ],
+            ),
+          );
   }
 }

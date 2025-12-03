@@ -23,7 +23,7 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 200),
               Image.asset(
                 'assets/grooming_main.png',
-                height: 230,
+                height: 200,
                 fit: BoxFit.contain,
                 alignment: Alignment.bottomCenter,
                 errorBuilder: (context, error, stackTrace) {
@@ -35,12 +35,12 @@ class WelcomeScreen extends StatelessWidget {
                 },
               ),
 
-              const SizedBox(height: 100),
+              const SizedBox(height: 80),
 
               // 🚩 1. 로그인 버튼 (순서 변경)
               SizedBox(
-                width: 199,
-                height: 59,
+                width: 180,
+                height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5A9AFF),
@@ -61,7 +61,7 @@ class WelcomeScreen extends StatelessWidget {
                     "로그인",
                     style: TextStyle(
                       fontFamily: 'GyeonggiTitle',
-                      fontSize: 32,
+                      fontSize: 26,
                       color: Colors.white,
                     ),
                   ),
@@ -73,8 +73,8 @@ class WelcomeScreen extends StatelessWidget {
 
               // 🚩 3. 회원가입 버튼 (순서 변경)
               SizedBox(
-                width: 199,
-                height: 59,
+                width: 180,
+                height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5A9AFF),
@@ -95,7 +95,7 @@ class WelcomeScreen extends StatelessWidget {
                     "회원가입",
                     style: TextStyle(
                       fontFamily: 'GyeonggiTitle',
-                      fontSize: 32,
+                      fontSize: 26,
                       color: Colors.white,
                     ),
                   ),

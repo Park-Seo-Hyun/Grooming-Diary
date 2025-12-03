@@ -68,7 +68,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   Future<void> _loadData() async {
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
       Navigator.pushReplacement(
         context,

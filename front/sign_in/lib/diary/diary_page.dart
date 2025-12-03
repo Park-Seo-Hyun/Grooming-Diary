@@ -135,18 +135,18 @@ class _DiaryPageState extends State<DiaryPage> {
                   color: Color(0xFF1A6DFF),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 35),
               const Text(
                 "오늘 하루는 어땠나요?",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'GyeonggiTitle',
                   fontSize: 25,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
                   color: Color(0xFF1A6DFF),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 50),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -180,7 +180,7 @@ class _DiaryPageState extends State<DiaryPage> {
                           hintText: "오늘의 이야기를 작성해주세요",
                           hintStyle: TextStyle(
                             fontFamily: 'GyeonggiTitle',
-                            fontSize: 18,
+                            fontSize: 15,
                             color: Color(0xFF999999),
                           ),
                           border: InputBorder.none,
@@ -217,37 +217,48 @@ class _DiaryPageState extends State<DiaryPage> {
                           ),
                         ],
                       ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const SizedBox(height: 30),
-                        IconButton(
-                          onPressed: () => _pickImage(ImageSource.gallery),
-                          icon: const Icon(
-                            Icons.image,
-                            color: Color(0xFF5A9AFF),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => _pickImage(ImageSource.camera),
-                          icon: const Icon(
-                            Icons.camera_alt,
-                            color: Color(0xFF5A9AFF),
-                          ),
-                        ),
-                        const Spacer(),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10, left: 10),
-                          child: Text(
-                            "${_controller.text.length}/$maxLength",
-                            style: const TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 14,
-                              color: Color(0xFFA7A7A7),
+                    Container(
+                      height: 30, // Row 전체 높이
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            onPressed: () => _pickImage(ImageSource.gallery),
+                            icon: const Icon(
+                              Icons.image,
+                              color: Color(0xFF5A9AFF),
                             ),
                           ),
-                        ),
-                      ],
+                          IconButton(
+                            onPressed: () => _pickImage(ImageSource.camera),
+                            icon: const Icon(
+                              Icons.camera_alt,
+                              color: Color(0xFF5A9AFF),
+                            ),
+                          ),
+                          const Spacer(),
+                          SizedBox(
+                            width: 100, // Stack의 너비 지정
+                            height: 30, // Stack의 높이 지정
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  top: 10, // 위쪽 위치 조정
+                                  right: 10, // 왼쪽 위치 조정
+                                  child: Text(
+                                    "${_controller.text.length}/$maxLength",
+                                    style: const TextStyle(
+                                      fontFamily: 'Pretendard',
+                                      fontSize: 14,
+                                      color: Color(0xFFA7A7A7),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -256,32 +267,44 @@ class _DiaryPageState extends State<DiaryPage> {
               Row(
                 children: [
                   Expanded(
-                    child: ElevatedButton(
-                      child: const Text("취소", style: TextStyle(fontSize: 18)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5A9AFF),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 20), // ← 바깥여백 추가
+                      child: ElevatedButton(
+                        child: const Text("취소", style: TextStyle(fontSize: 18)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF5A9AFF),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 6, // ← 그림자 높이 조절 (0~24 정도)
+                          shadowColor: Colors.black.withOpacity(
+                            0.5,
+                          ), // ← 그림자 색상/투명도
                         ),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 35),
                   Expanded(
-                    child: ElevatedButton(
-                      child: const Text("저장", style: TextStyle(fontSize: 18)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5A9AFF),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 20), // ← 바깥여백 추가
+                      child: ElevatedButton(
+                        child: const Text("저장", style: TextStyle(fontSize: 18)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF5A9AFF),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 6, // ← 그림자 높이 조절 (0~24 정도)
+                          shadowColor: Colors.black.withOpacity(0.5),
                         ),
+                        onPressed: () {},
                       ),
-                      onPressed: _saveDiary,
                     ),
                   ),
                 ],

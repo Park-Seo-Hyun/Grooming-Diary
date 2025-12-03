@@ -110,3 +110,37 @@ class AuthService {
     print('🔒 로그아웃 완료 (JWT 삭제)');
   }
 }
+
+extension AuthServiceExtension on AuthService {
+  /// 🗑 회원 탈퇴
+  Future<bool> deleteAccount() async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        print('❌ JWT가 없습니다. 로그인이 필요합니다.');
+        return false;
+      }
+
+      final url = Uri.parse('$baseUrl/auth/delete'); // 서버 경로 확인 필요
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        await logout(); // 탈퇴 후 JWT 삭제
+        print('✅ 회원 탈퇴 성공');
+        return true;
+      } else {
+        print('❌ 회원 탈퇴 실패: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('❌ 회원 탈퇴 오류: $e');
+      return false;
+    }
+  }
+}

@@ -30,14 +30,14 @@ class EmotionState {
   final String emotionEmoji;
   final int emotionCnt;
   final double emotionPercent;
-  final String? emotionImageUrl; // ✅ 새 필드 추가
+  final String? emotionImageUrl;
 
   EmotionState({
     required this.emotionLabel,
     required this.emotionEmoji,
     required this.emotionCnt,
     required this.emotionPercent,
-    this.emotionImageUrl, // 생성자에 추가
+    this.emotionImageUrl,
   });
 
   factory EmotionState.fromJson(Map<String, dynamic> json) {
@@ -46,18 +46,18 @@ class EmotionState {
       emotionEmoji: json["emotion_emoji"],
       emotionCnt: (json["emotion_cnt"] as num).toInt(),
       emotionPercent: (json["emotion_percent"] as num).toDouble(),
-      emotionImageUrl: json["emotion_image_url"], // 서버에서 내려오는 이미지 URL
+      emotionImageUrl: json["emotion_image_url"],
     );
   }
 }
 
 class DailyEmotionScore {
-  final String date;
-  final int angry;
-  final int fear;
-  final int happy;
-  final int tender;
-  final int sad;
+  final DateTime date; // DateTime으로 안전하게 변환
+  final double angry;
+  final double fear;
+  final double happy;
+  final double tender;
+  final double sad;
 
   DailyEmotionScore({
     required this.date,
@@ -69,13 +69,20 @@ class DailyEmotionScore {
   });
 
   factory DailyEmotionScore.fromJson(Map<String, dynamic> json) {
+    DateTime parsedDate;
+    try {
+      parsedDate = DateTime.parse(json["date"]);
+    } catch (_) {
+      parsedDate = DateTime.now(); // 안전하게 기본값 설정
+    }
+
     return DailyEmotionScore(
-      date: json["date"],
-      angry: (json["Angry"] as num).toInt(),
-      fear: (json["Fear"] as num).toInt(),
-      happy: (json["Happy"] as num).toInt(),
-      tender: (json["Tender"] as num).toInt(),
-      sad: (json["Sad"] as num).toInt(),
+      date: parsedDate,
+      angry: (json["Angry"] as num).toDouble(),
+      fear: (json["Fear"] as num).toDouble(),
+      happy: (json["Happy"] as num).toDouble(),
+      tender: (json["Tender"] as num).toDouble(),
+      sad: (json["Sad"] as num).toDouble(),
     );
   }
 }

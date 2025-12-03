@@ -83,7 +83,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           hintText: hintText,
           hintStyle: const TextStyle(
             fontFamily: 'GyeonggiTitle',
-            fontSize: 24,
+            fontSize: 20,
             color: Color(0xFFCFCFCF),
           ),
           suffixIcon: isBirthdateField
@@ -112,7 +112,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               hintText: "아이디",
               hintStyle: TextStyle(
                 fontFamily: 'GyeonggiTitle',
-                fontSize: 24,
+                fontSize: 20,
                 color: Color(0xFFCFCFCF),
               ),
               enabledBorder: UnderlineInputBorder(
@@ -127,7 +127,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             right: 0,
             bottom: 10,
             child: SizedBox(
-              height: 40,
+              height: 35,
               child: ElevatedButton(
                 onPressed: _checkDuplicate,
                 style: ElevatedButton.styleFrom(
@@ -142,7 +142,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   "중복확인",
                   style: TextStyle(
                     fontFamily: 'GyeonggiTitle',
-                    fontSize: 20,
+                    fontSize: 15,
                     color: Color(0xFFFFFFFF),
                   ),
                 ),
@@ -289,7 +289,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: const Color(0xFFEEEEEE), height: 7.0),
+          child: Container(color: const Color(0xFFEEEEEE), height: 5.0),
         ),
         elevation: 0.0,
       ),
@@ -304,12 +304,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 "회원가입",
                 style: TextStyle(
                   fontFamily: 'Gyeonggibatang',
-                  fontSize: 40,
+                  fontSize: 35,
                   color: Color(0xFF5A9AFF),
                 ),
               ),
             ),
-            const SizedBox(height: 70),
+            const SizedBox(height: 50),
 
             _buildTextField(nameController, "이름 (실명 입력)", false),
             const SizedBox(height: 30),
@@ -331,7 +331,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 children: [_buildGenderButton("남성"), _buildGenderButton("여성")],
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 15),
 
             // ✅ 개인정보 수집 동의 체크박스
             Padding(
@@ -352,7 +352,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       '개인정보 제 3자 제공 동의(필수)',
                       style: TextStyle(
                         fontFamily: 'GyeonggiTitle',
-                        fontSize: 18,
+                        fontSize: 16,
                       ),
                     ),
                   ),
@@ -363,8 +363,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
             const SizedBox(height: 20),
             Center(
               child: SizedBox(
-                width: 302,
-                height: 62,
+                width: 295,
+                height: 59,
                 child: ElevatedButton(
                   onPressed: agreePrivacy ? _register : null, // ✅ 동의해야 활성화
                   style: ElevatedButton.styleFrom(

@@ -179,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: const Color(0xFFEEEEEE), height: 7.0),
+          child: Container(color: const Color(0xFFEEEEEE), height: 5.0),
         ),
         elevation: 0.0,
       ),
@@ -194,12 +194,12 @@ class _LoginPageState extends State<LoginPage> {
                 "로그인",
                 style: TextStyle(
                   fontFamily: 'Gyeonggibatang',
-                  fontSize: 40,
+                  fontSize: 35,
                   color: Color(0xFF5A9AFF),
                 ),
               ),
             ),
-            const SizedBox(height: 150),
+            const SizedBox(height: 100),
 
             // 아이디 입력
             Padding(
@@ -210,7 +210,7 @@ class _LoginPageState extends State<LoginPage> {
                   hintText: "아이디",
                   hintStyle: TextStyle(
                     fontFamily: 'GyeonggiTitle',
-                    fontSize: 24,
+                    fontSize: 20,
                     color: Color(0xFFCFCFCF),
                   ),
                   enabledBorder: UnderlineInputBorder(
@@ -240,7 +240,7 @@ class _LoginPageState extends State<LoginPage> {
                   hintText: "비밀번호",
                   hintStyle: TextStyle(
                     fontFamily: 'GyeonggiTitle',
-                    fontSize: 24,
+                    fontSize: 20,
                     color: Color(0xFFCFCFCF),
                   ),
                   enabledBorder: UnderlineInputBorder(
@@ -265,7 +265,7 @@ class _LoginPageState extends State<LoginPage> {
             Center(
               child: SizedBox(
                 height: 62,
-                width: 302,
+                width: 300,
                 child: ElevatedButton(
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(
