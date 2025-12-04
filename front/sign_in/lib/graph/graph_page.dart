@@ -34,6 +34,8 @@ class _GraphPageState extends State<GraphPage> {
     int year = int.parse(parts[0]);
     int month = int.parse(parts[1]);
 
+    final displayText = "$year년 $month월";
+
     final monthDate = DateTime(year, month);
 
     // 미래 달이면 데이터를 요청하지 않고 안내 표시
@@ -75,30 +77,47 @@ class _GraphPageState extends State<GraphPage> {
     loadGraphData();
   }
 
-  final Map<String, String> customRoles = {
-    "햇살이": "행복",
-    "구슬이": "슬픔",
-    "화풍이": "화남",
-    "두절이": "불안",
-    "평달이": "평온",
-    "평푱이": "중립",
+  final Map<String, String> roleName = {
+    "happy": "행복",
+    "sad": "슬픔",
+    "angry": "화남",
+    "fear": "불안",
+    "tender": "평온",
+    "neutral": "중립",
   };
 
-  final Map<String, String> customRoleDescriptions = {
-    "햇살이": "(기쁠때 나타나요!)",
-    "구슬이": "(슬플때 나타나요..)",
-    "화풍이": "(화날때 나타나요!)",
-    "두절이": "(조금 불안할 때 나타나요.)",
-    "평달이": "(평온할 때 나타나요~)",
-    "평푱이": "(그저 평범할 때 나타나요.)",
+  final Map<String, String> roleDesc = {
+    "happy": "(기쁨, 즐거움, 만족)",
+    "sad": "(우울, 슬픔, 낙담)",
+    "angry": "(화남, 짜증, 분개)",
+    "fear": "(걱정, 근심, 두려움)",
+    "tender": "(평온, 안정, 편안)",
+    "neutral": "(even)",
   };
-  final Map<String, String> customComments = {
-    "햇살이": "행복이는 행복할때 나타나요!!",
-    "구슬이": "슬픈 날에는 이렇게 나타나요..",
-    "화풍이": "화날때 나타나요!",
-    "두절이": "조금 불안할 때 나타나요.",
-    "평달이": "평온할 때 나타나요~",
-    "평푱이": "그저 평범할 때 나타나요.",
+
+  final Map<String, String> charName = {
+    "happy": "햇살이",
+    "sad": "구슬이",
+    "angry": "화풍이",
+    "fear": "두절이",
+    "tender": "평달이",
+    "neutral": "평푱이",
+  };
+
+  /// 👉 여기! 너가 직접 적어서 보여줄 텍스트
+  final Map<String, String> customComment = {
+    "happy":
+        "행복을 담당하는 감정 캐릭터로\n 따뜻한 햇빛처럼 마음을 밝히는 행복의 수호자입니다. 햇살이는 여러분의 긍정적인 감정을 찾아 반짝이며 기쁨의 메시지를 전해줍니다. \"오늘도 너의 마음에 따뜻한 햇살이 비치길 바라!\"",
+    "sad":
+        "슬픔을 담당하는 감정 캐릭터로\n 구슬이는 마움속에 먹구름이 드리워질 때 찾아오는 슬픔의 작은 수호자입니다. 구슬이는 말없이 곁에 머물며 이렇게 이야기합니다. \"울어도 괜찮아. 네가 느끼는 감정은 모두 소중해.\"",
+    "angry":
+        "분노를 담당하는 감정 캐릭터로\n 억눌린 분노를 이해하고 안전하게 표현할 수 있도록 도와주는 감정의 수호자입니다. 화풍이는 감정을 억누르지 않아도 괜찮다고 말없이 곁에서 함께합니다. \"화를 느끼는 건 잘못이 아니야. 네 감정에는 언제나 이유가 있어.\"",
+    "fear":
+        "두려움을 담당하는 감정 캐릭터로\n 마음속에 피어오르는 걱정과 두려움을 품에 안는 감정 수호자입니다. 두절이는 작은 몸을 덜덜 떨며 곁에 조용히 머물러 이렇게 말합니다. \"무서워도 괜찮아. 네가 느끼는 걱정과 두려움도 다 소중한 감정이야.\"",
+    "tender":
+        "평온을 담당하는 감정 캐릭터로\n 평달이는 고요한 밤하늘에 떠 있는 밤하늘에 초승달처럼, 마음속 불안을 부드럽게 감싸주며 평온함을 지켜주는 존재입니다. 평달이는 조용히 곁에서 속삭입니다. \"괜찮아, 지금 이 순간만큼은 천천히 쉬워도 돼.\"",
+    "neutral":
+        "중립을 담당하는 감정 캐릭터로\n 오늘의 기쁨을 명확히 한 단어로 나타낼 수 없는 감정의 수호자입니다. \"이런날도 있고 저런날도 있는거야~~\"",
   };
 
   void showEmotionPopup() {
@@ -110,124 +129,166 @@ class _GraphPageState extends State<GraphPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          titlePadding: const EdgeInsets.only(
-            left: 16,
-            right: 8,
-            top: 16,
-            bottom: 0,
-          ),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+          title: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                "감정 소개",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              // ⭐ 가운데 제목 + 오른쪽 X 버튼
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      "감정 소개",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'GyeonggiBatang',
+                        color: Color(0xFF585858),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: const Icon(Icons.close),
+                    ),
+                  ),
+                ],
               ),
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: const Icon(Icons.close, size: 24),
+
+              // ⭐ 아래에 얇은 구분선
+              const Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                child: Divider(
+                  thickness: 1,
+                  height: 1,
+                  color: Color(0xFFDDDDDD),
+                ),
               ),
             ],
           ),
+
           content: SizedBox(
             width: double.maxFinite,
-            child: graphData == null
-                ? const Center(child: Text("데이터가 없습니다."))
-                : ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: graphData!.emotionState.length,
-                    itemBuilder: (context, index) {
-                      final emotion = graphData!.emotionState[index];
-                      final imageUrl =
-                          GraphService.baseUrl + emotion.emotionEmoji;
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: graphData!.emotionState.length,
+              itemBuilder: (context, index) {
+                final emotion = graphData!.emotionState[index];
 
-                      return Column(
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // 이미지
-                              Image.network(
-                                imageUrl,
-                                height: 100,
-                                width: 100,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(
-                                      Icons.sentiment_neutral,
-                                      size: 24,
-                                    ),
-                              ),
-                              const SizedBox(width: 12),
-                              // 감정 텍스트 3줄
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // 이름: 볼드체
-                                    Text(
-                                      "이름: ${emotion.emotionLabel}",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                // 🔥 핵심: label 키 정리
+                final rawLabel = emotion.emotionLabel;
+                final label = emotion.emotionLabel.trim().toLowerCase();
+
+                final imageUrl = GraphService.baseUrl + emotion.emotionEmoji;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Image.network(
+                          imageUrl,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(width: 12),
+
+                        // ⭐ 여기 padding으로 텍스트를 조금 아래로 내림
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              top: 8,
+                            ), // ← 숫자 조절하면 높이 조절 가능!
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 👉 이름
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      const TextSpan(
+                                        text: "이름 : ",
+                                        style: TextStyle(
+                                          fontFamily: 'Pretendard',
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    // 역할: 볼드체 / 설명: 일반체
-                                    Text.rich(
                                       TextSpan(
-                                        children: [
-                                          const TextSpan(
-                                            text: "역할: ",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text:
-                                                customRoles[emotion
-                                                    .emotionLabel] ??
-                                                "",
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          const TextSpan(text: " "),
-                                          TextSpan(
-                                            text:
-                                                customRoleDescriptions[emotion
-                                                    .emotionLabel] ??
-                                                "",
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.normal,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ],
+                                        text: charName[label] ?? label,
+                                        style: const TextStyle(
+                                          fontFamily: 'Pretendard',
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.normal,
+                                          color: Colors.black,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    // 주석
-                                    Text(
-                                      customComments[emotion.emotionLabel] ??
-                                          "",
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+
+                                const SizedBox(height: 4),
+
+                                // 👉 역할
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      const TextSpan(
+                                        text: " 역할 : ",
+
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontFamily: 'Pretendard',
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text:
+                                            "${roleName[label] ?? ""} ${roleDesc[label] ?? ""}",
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontFamily: 'Pretendard',
+                                          fontWeight: FontWeight.normal,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const Divider(),
-                        ],
-                      );
-                    },
-                  ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // 긴 설명 텍스트 — 사진 밑에 나오기!
+                    Text(
+                      customComment[label] ?? "",
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF555555),
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+                    // 🔥 Divider를 Dialog padding 밖까지 확장
+                    const Divider(),
+                  ],
+                );
+              },
+            ),
           ),
         );
       },
@@ -276,13 +337,25 @@ class _GraphPageState extends State<GraphPage> {
                           onPressed: () => changeMonth(-1),
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          currentMonth,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final parts = currentMonth.split('-');
+                            int year = int.parse(parts[0]);
+                            int month = int.parse(parts[1]);
+                            final displayText = "$year년 $month월";
+
+                            return Text(
+                              displayText,
+                              style: const TextStyle(
+                                fontSize: 20,
+
+                                fontFamily: 'GyeonggiBatang',
+                                color: Color(0xFF626262),
+                              ),
+                            );
+                          },
                         ),
+
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.arrow_right, size: 30),

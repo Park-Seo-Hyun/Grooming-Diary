@@ -9,6 +9,21 @@ class DoughnutGraphWidgetFL extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (emotionState.isEmpty) {
+      return SizedBox(
+        height: 200,
+        child: Center(
+          child: Text(
+            "감정을 기다리고 있어요!",
+            style: const TextStyle(
+              fontSize: 16,
+              fontFamily: 'GyeonggiBatang',
+              color: Colors.black,
+            ),
+          ),
+        ),
+      );
+    }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

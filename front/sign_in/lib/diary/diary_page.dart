@@ -303,7 +303,7 @@ class _DiaryPageState extends State<DiaryPage> {
                           elevation: 6, // ← 그림자 높이 조절 (0~24 정도)
                           shadowColor: Colors.black.withOpacity(0.5),
                         ),
-                        onPressed: () {},
+                        onPressed: _saveDiary,
                       ),
                     ),
                   ),

@@ -121,7 +121,7 @@ extension AuthServiceExtension on AuthService {
         return false;
       }
 
-      final url = Uri.parse('$baseUrl/auth/delete'); // 서버 경로 확인 필요
+      final url = Uri.parse('$baseUrl/auth/unsubscribe'); // 서버 경로 확인 필요
       final response = await http.delete(
         url,
         headers: {
