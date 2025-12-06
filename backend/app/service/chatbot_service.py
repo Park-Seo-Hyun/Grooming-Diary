@@ -1,3 +1,4 @@
+# backend/app/ai_model/chatbot_service.py
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 import torch.nn.functional as F

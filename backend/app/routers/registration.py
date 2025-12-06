@@ -1,4 +1,4 @@
-# backend/router/registration.py
+# backend/app/router/registration.py
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from ..models.user import User 

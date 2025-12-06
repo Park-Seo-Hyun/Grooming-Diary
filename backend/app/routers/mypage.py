@@ -1,4 +1,4 @@
-# backend/router/mypage.py
+# backend/app/router/mypage.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta

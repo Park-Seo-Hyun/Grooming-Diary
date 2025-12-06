@@ -1,8 +1,9 @@
-# backend/router/main_diary.py
+# backend/app/router/main_diary.py
 from fastapi import APIRouter, Depends, HTTPException, status, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 from typing import List, Dict, Any, Optional
+from PIL import Image
 
 import os
 import uuid
@@ -10,6 +11,7 @@ import shutil
 import locale
 import io
 import base64
+import random
 
 from ..models.user import User 
 from ..models.diary import Diary 
@@ -18,6 +20,11 @@ from ..schemas import diarySchema, userSchema
 from ..database import get_db
 from ..service import nlp_service, chatbot_service
 import calendar
+
+from ..config.templates import (
+    INTRO_TEMPLATES, 
+    WARMTH_TEMPLATES,
+)
 
 ## 1. 환경 변수에서 경로를 읽어옵니다. 
 TEMP_DIR_RELATIVE = os.getenv("PYTHON_TEMP_DIR", "app/temp_data")
@@ -60,26 +67,39 @@ EMOTION_WEIGHTS = {
     "Neutral": 1, # 중립
 }
 
-def encode_emoji_to_base64(filename: str) -> str:
-    """
-    이모지 파일명을 받아 파일을 읽고 Base64 문자열로 인코딩합니다.
-    """
-    file_path = os.path.join(EMOJI_DIR, filename)
+def convert_png_to_webp(filename: str) -> str:
+    png_path = os.path.join(EMOJI_DIR, filename)
+    webp_filename = filename.replace(".png", ".webp")
+    webp_path = os.path.join(EMOJI_DIR, webp_filename)
     
-    if not os.path.exists(file_path):
-        # 파일이 없을 경우, 오류를 피하기 위해 빈 문자열 반환 (프론트엔드에서 처리)
-        print(f"WARNING: Emoji file not found at {file_path}. Using empty Base64 string.")
-        return "" 
+    if os.path.exists(webp_path):
+        return webp_filename
     
-    try:
-        with open(file_path, "rb") as image_file:
-            # Base64 인코딩
-            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-            # Flutter에서 Image.memory를 위해 데이터 URI 헤더 없이 데이터만 반환
-            return encoded_string
-    except Exception as e:
-        print(f"ERROR: Failed to encode image {filename}: {e}")
-        return ""
+    img = Image.open(png_path).convert("RGBA")
+    img.save(webp_path, "WEBP", lossless=True, quality=100)
+    
+    return webp_filename
+
+# def encode_emoji_to_base64(filename: str) -> str:
+#     """
+#     이모지 파일명을 받아 파일을 읽고 Base64 문자열로 인코딩합니다.
+#     """
+#     file_path = os.path.join(EMOJI_DIR, filename)
+    
+#     if not os.path.exists(file_path):
+#         # 파일이 없을 경우, 오류를 피하기 위해 빈 문자열 반환 (프론트엔드에서 처리)
+#         print(f"WARNING: Emoji file not found at {file_path}. Using empty Base64 string.")
+#         return "" 
+    
+#     try:
+#         with open(file_path, "rb") as image_file:
+#             # Base64 인코딩
+#             encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+#             # Flutter에서 Image.memory를 위해 데이터 URI 헤더 없이 데이터만 반환
+#             return encoded_string
+#     except Exception as e:
+#         print(f"ERROR: Failed to encode image {filename}: {e}")
+#         return ""
 
 ## helper function
 def create_diary_response(diary: Diary, user_name: str) -> dict:
@@ -109,6 +129,33 @@ def create_diary_response(diary: Diary, user_name: str) -> dict:
         
         "created_at": diary.created_at,
     }
+    
+## ai봇 코멘트 생성
+def create_ai_response(content: str, user_name: str, emotion_label: str) -> str:
+    ai_comment_raw = f"오늘 {user_name}님은 여러가지 감정이 섞인 하루를 보냈군요"
+    
+    try:
+        ai_comment_raw = chatbot_service.generate_comment(content)
+        
+        intro_template_list = list(INTRO_TEMPLATES)
+        selected_intro_template = random.choice(intro_template_list)
+        intro_phrase = f"{user_name}{selected_intro_template}"
+        
+        emotion_key = emotion_label
+        warmth_templates = WARMTH_TEMPLATES.get(emotion_key, WARMTH_TEMPLATES["Natural"])
+        warmth_phrase = random.choice(warmth_templates)
+        
+        final_comment = (
+            f"{intro_phrase} {ai_comment_raw} {warmth_phrase}"
+        )
+        
+        return final_comment
+        
+    except Exception as e:
+        # AI 챗봇 서비스 실패 시 기본 코멘트 반환
+        print(f"Chatbot Service Failed: {e}")
+        return ai_comment_raw
+    
 
 ## 사용자 감정 점수 계산 helper function  
 def calculate_emotion_score(diaries: List[Diary], weights: Dict[str, int]) -> float:
@@ -182,11 +229,11 @@ def get_all_diaries(
     calendar_diaries = []
 
     for entry in all_diaries:
-        base64_data = encode_emoji_to_base64(entry.emotion_emoji)
+        web_name = convert_png_to_webp(entry.emotion_emoji)
         calendar_diaries.append(diarySchema.CalendarResponse(
             id=entry.id,
             diary_date=entry.diary_date,
-            emotion_emoji=base64_data
+            emotion_emoji=f"/static/emoji/{web_name}"
         ))
         
     return {
@@ -205,6 +252,7 @@ def create_diary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user) ## JWT 인증 적용
 ):
+    user_name = current_user.user_name
     ## 이미지 파일 처리
     uploaded_image_url: Optional[str] = None
     if image_file and image_file.filename:
@@ -242,6 +290,7 @@ def create_diary(
         'emotion_label': "Neutral",
         'overall_emotion_score': default_overall_emotion_score,
     }
+    
     ai_comment_text = "오늘 너는 여러가지 감정이 섞인 하루를 보냈구나"
     
     # FIX: NLP 서비스 예외 처리 및 감정 점수 임계값 적용
@@ -252,7 +301,7 @@ def create_diary(
         analysis_result['overall_emotion_score'] = raw_analysis['overall_emotion_score']
             
         ## AI 코멘트 생성
-        ai_comment_text = chatbot_service.generate_comment(content)
+        ai_comment_text = create_ai_response(content, user_name, raw_analysis['emotion_label'])
         
     except Exception as e:
         print(f"NLP/Chatbot Service Failed: {e}")
@@ -313,6 +362,7 @@ def update_diary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    user_name = current_user.user_name
     diary_query = db.query(Diary).filter(
         Diary.user_id == current_user.id,
         Diary.id == id
@@ -362,7 +412,7 @@ def update_diary(
         'emotion_label': diary.emotion_label or "Neutral",
         'overall_emotion_score': diary.overall_emotion_score or default_overall_emotion_score,
     }
-    ai_comment_text = diary.ai_comment or "오늘 너는 여러가지 감정이 섞인 하루를 보냈구나"
+    ai_comment_text = diary.ai_comment or f"오늘 {user_name}님은 여러가지 감정이 섞인 하루를 보냈군요"
     
     if content_changed:
         try:
@@ -374,7 +424,7 @@ def update_diary(
             analysis_result['emotion_label'] = raw_analysis['emotion_label']
             
             ## AI 코멘트 재생성
-            ai_comment_text = chatbot_service.generate_comment(updated_content)
+            ai_comment_text = create_ai_response(updated_content, user_name, analysis_result['emotion_label'])
 
         except Exception as e:
             print(f"NLP/Chatbot Service Failed: {e}")

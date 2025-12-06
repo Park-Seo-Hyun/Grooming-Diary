@@ -1,3 +1,4 @@
+# backend/app/ai_model/nlp_service.py
 import torch
 import torch.nn.functional as F
 import os
@@ -14,7 +15,7 @@ EMOTION_LABELS = {
 }
 
 ## 임계값 (임시)
-CONFIDENCE_THRESHOLD = 0.60
+CONFIDENCE_THRESHOLD = 0.65
 
 # '중립' 감정 레이블 정보 (모델이 확신하지 못할 때 사용)
 NEUTRAL_EMOTION = {
