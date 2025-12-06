@@ -1,11 +1,8 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:sign_in/diary/diary_entry_detail.dart';
-
 class DiaryEntry {
   final String id;
   final DateTime date;
-  final String? emoji; // 홈페이지용 이미지/이모지
-  final String? text; // 서버의 content
+  final String? emoji; // 이제 URL 기준
+  final String? text;
   final String? aiComment;
   final String userName;
 
@@ -19,18 +16,20 @@ class DiaryEntry {
   });
 
   factory DiaryEntry.fromDetail(DiaryEntryDetail detail) {
-    // DiaryEntryDetail → DiaryEntry 변환용
     return DiaryEntry(
       id: detail.id,
       date: detail.date,
-      emoji: detail.imageUrl, // 홈페이지는 base64/URL 그대로
+      emoji: detail.imageUrl, // 이제 URL
       text: detail.text,
       aiComment: detail.aiComment,
       userName: detail.userName,
     );
   }
 
-  factory DiaryEntry.fromJson(Map<String, dynamic> json) {
+  factory DiaryEntry.fromJson(
+    Map<String, dynamic> json, {
+    bool fromHomepage = false,
+  }) {
     DateTime parsedDate;
     try {
       parsedDate = DateTime.parse(json['diary_date']?.toString() ?? '');
@@ -38,10 +37,20 @@ class DiaryEntry {
       parsedDate = DateTime.now();
     }
 
+    String? imageData;
+
+    if (fromHomepage) {
+      // 홈페이지용 Base64
+      imageData = json['emotion_emoji']?.toString();
+    } else {
+      // URL 기반
+      imageData = json['primary_image_url']?.toString();
+    }
+
     return DiaryEntry(
       id: json['id']?.toString() ?? '',
       date: parsedDate,
-      emoji: json['primary_image_url']?.toString(),
+      emoji: imageData,
       text: json['content']?.toString() ?? '',
       aiComment: json['ai_comment']?.toString(),
       userName: json['user_name']?.toString() ?? '사용자',

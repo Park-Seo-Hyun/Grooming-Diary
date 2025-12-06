@@ -59,21 +59,13 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
   }
 
   Widget _buildImage() {
-    // 1️⃣ 로컬 이미지가 있으면 비율 유지하며 표시
     if (_entry?.localImageFile != null) {
       return ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 500, // 최대 가로
-          maxHeight: 280, // 최대 세로
-        ),
-        child: Image.file(
-          _entry!.localImageFile!,
-          fit: BoxFit.contain, // 비율 유지, 잘리지 않음
-        ),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 280),
+        child: Image.file(_entry!.localImageFile!, fit: BoxFit.contain),
       );
     }
 
-    // 2️⃣ 서버 이미지가 없으면 "이미지 없음"
     if (_entry?.imageUrl == null || _entry!.imageUrl!.isEmpty) {
       return const SizedBox(
         width: 500,
@@ -82,7 +74,6 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
       );
     }
 
-    // 3️⃣ 서버 URL + 캐시 무시 쿼리 추가
     final fullUrl = _entry!.imageUrl!.startsWith("http")
         ? _entry!.imageUrl!
         : "${_diaryService.baseUrl}${_entry!.imageUrl}";
@@ -91,7 +82,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
       constraints: const BoxConstraints(maxWidth: 500, maxHeight: 300),
       child: Image.network(
         fullUrl,
-        fit: BoxFit.contain, // 비율 유지
+        fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
           return const SizedBox(
             width: 500,
@@ -101,6 +92,108 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
         },
       ),
     );
+  }
+
+  // 🔹 삭제 확인 다이얼로그 (디자인 & 기능 그대로)
+  Future<bool> _showDeleteConfirmDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 30),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 30),
+              const Text(
+                '일기를 삭제하실 건가요?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F74F8),
+                ),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                '삭제하면 일기는 복구되지 않습니다.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 13,
+                  color: Color(0xFF1F74F8),
+                ),
+              ),
+              const SizedBox(height: 30),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => Navigator.pop(context, true),
+                      borderRadius: const BorderRadius.only(
+                        bottomRight: Radius.circular(15),
+                      ),
+                      child: Container(
+                        height: 56,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF99BEF7),
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(15),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          '삭제하기',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Pretendard',
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => Navigator.pop(context, false),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(15),
+                      ),
+                      child: Container(
+                        height: 56,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF5A9AFF),
+                          borderRadius: BorderRadius.only(
+                            bottomRight: Radius.circular(15),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          '취소하기',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Pretendard',
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   @override
@@ -148,45 +241,28 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  // 🔹 삭제 버튼
                   ElevatedButton(
                     onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (context) => AlertDialog(
-                          title: const Text('일기를 삭제하시겠습니까?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text('삭제'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('취소'),
-                            ),
-                          ],
-                        ),
-                      );
+                      final confirm = await _showDeleteConfirmDialog(context);
+                      if (!confirm) return;
 
-                      if (confirm == true) {
-                        try {
-                          print('Deleting diary with id: ${widget.diaryId}');
-                          final success = await _diaryService.deleteDiary(
-                            widget.diaryId,
-                          );
-                          if (success) {
-                            widget.onDelete();
-                            Navigator.pop(context); // 삭제 후 뒤로
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('삭제 중 오류가 발생했습니다.')),
-                            );
-                          }
-                        } catch (e) {
+                      try {
+                        final success = await _diaryService.deleteDiary(
+                          widget.diaryId,
+                        );
+                        if (success) {
+                          widget.onDelete();
+                          Navigator.pop(context); // 삭제 후 뒤로
+                        } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('삭제 중 오류: $e')),
+                            const SnackBar(content: Text('삭제 중 오류가 발생했습니다.')),
                           );
                         }
+                      } catch (e) {
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text('삭제 중 오류: $e')));
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -194,14 +270,15 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
-                      ), // 둥글기
-                      elevation: 5, // 그림자
-                      shadowColor: Colors.black.withOpacity(0.5), // 그림자 색
+                      ),
+                      elevation: 5,
+                      shadowColor: Colors.black.withOpacity(0.5),
                     ),
                     child: const Text('삭제'),
                   ),
 
                   const SizedBox(width: 8),
+                  // 🔹 수정 버튼 (기존 그대로)
                   ElevatedButton(
                     onPressed: () async {
                       final updated = await Navigator.push<DiaryEntryDetail?>(
@@ -216,7 +293,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
 
                       if (updated != null) {
                         setState(() {
-                          _entry = updated; // localImageFile 포함 갱신
+                          _entry = updated;
                         });
                         if (widget.onUpdate != null) widget.onUpdate!(updated);
                       }
@@ -226,31 +303,25 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
-                      ), // 둥글기
-                      elevation: 5, // 그림자
-                      shadowColor: Colors.black.withOpacity(0.5), // 그림자 색
+                      ),
+                      elevation: 5,
+                      shadowColor: Colors.black.withOpacity(0.5),
                     ),
-
                     child: const Text('수정'),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
               Center(child: _buildImage()),
-
-              // 1️⃣ _DiaryDetailPageState 안에 상태 변수 추가
-
-              // 2️⃣ Center(child: _buildImage()), 아래와 const SizedBox(height: 20), 사이에 Row 추가
-              const SizedBox(height: 0), // 사진과 아이콘 사이 간격
+              const SizedBox(height: 0),
               SizedBox(
                 width: double.infinity,
-                height: 40, // 아이콘 영역 높이
+                height: 40,
                 child: Stack(
                   children: [
-                    // 하트
                     Positioned(
-                      top: 5, // 위쪽 간격
-                      left: -7, // 왼쪽 간격
+                      top: 5,
+                      left: -7,
                       child: IconButton(
                         onPressed: () {
                           setState(() {
@@ -263,24 +334,20 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                         ),
                       ),
                     ),
-                    // 말풍선
                     Positioned(
                       top: 5,
-                      left: 40, // 하트와 간격
+                      left: 40,
                       child: IconButton(
-                        onPressed: () {
-                          // 말풍선 색 변경 없음
-                        },
+                        onPressed: () {},
                         icon: const Icon(
                           Icons.chat_bubble_outline,
                           color: Colors.grey,
                         ),
                       ),
                     ),
-                    // 북마크
                     Positioned(
                       top: 5,
-                      right: -10, // 오른쪽 끝에서 간격
+                      right: -10,
                       child: IconButton(
                         onPressed: () {
                           setState(() {
@@ -296,9 +363,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 20), // 기존 여백 유지
-
+              const SizedBox(height: 20),
               Text.rich(
                 TextSpan(
                   children: [
@@ -323,20 +388,19 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                   ],
                 ),
               ),
-              SizedBox(height: 25),
+              const SizedBox(height: 25),
               SizedBox(
                 child: Text.rich(
-                  TextSpan(
+                  const TextSpan(
                     text: '댓글 1개',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'GyeonggiBatang',
-                      fontSize: 12, // 가독성 있게 조정
+                      fontSize: 12,
                       color: Color(0xFF626262),
                     ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 22),
               if (_entry!.aiComment != null && _entry!.aiComment!.isNotEmpty)
                 Container(
@@ -346,13 +410,11 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                     color: const Color(0xFFE9F0FB),
                     borderRadius: BorderRadius.circular(12),
                   ),
-
                   child: Text.rich(
                     TextSpan(
                       children: [
                         const TextSpan(
                           text: 'AI봇\n',
-
                           style: TextStyle(
                             fontFamily: 'GyeonggiBatang',
                             fontSize: 15,

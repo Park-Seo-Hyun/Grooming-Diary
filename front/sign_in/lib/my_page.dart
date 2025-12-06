@@ -294,10 +294,9 @@ class _MyPageState extends State<MyPage> {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = (myPageData!['created_at'] ?? '').replaceAll(
-      '-',
-      '. ',
-    );
+    final rawDate = myPageData?['created_at'];
+    final createdAtString = rawDate is String ? rawDate : '';
+    final formattedDate = createdAtString.replaceAll('-', '.');
 
     return SingleChildScrollView(
       child: Column(

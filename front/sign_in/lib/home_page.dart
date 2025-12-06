@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'diary/diary_entry.dart'; // 경로 확인 필요
@@ -19,6 +20,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String? _debugEmojiBase64;
   List<DiaryEntry> diaries = [];
 
   DateTime _focusedDay = DateTime.now();
@@ -53,8 +55,12 @@ class _HomePageState extends State<HomePage> {
     return _lastDayOfMonth.add(Duration(days: 6 - weekday));
   }
 
+  final Map<String, Map<DateTime, DiaryEntry>> _monthlyCache = {};
+
   Future<void> _loadMonthlyDiaries() async {
     String monthlyYear = DateFormat('yyyy-MM').format(_focusedDay);
+    print("🔍 월별 일기 요청: $monthlyYear");
+
     try {
       final response = await _diaryService.getMonthlyDiaries(monthlyYear);
 
@@ -73,20 +79,31 @@ class _HomePageState extends State<HomePage> {
 
         for (var item in diaries) {
           try {
-            final entry = DiaryEntry.fromJson(item);
+            // Homepage 전용 Base64 읽기
+            final diaryEntry = DiaryEntry.fromJson(
+              item,
+              fromHomepage: true,
+            ); // item 사용
+
             DateTime dateKey = DateTime(
-              entry.date.year,
-              entry.date.month,
-              entry.date.day,
+              diaryEntry.date.year,
+              diaryEntry.date.month,
+              diaryEntry.date.day,
             );
-            diaryEntries[dateKey] = entry;
+
+            diaryEntries[dateKey] = diaryEntry;
+
+            // 확인용 출력
+            print(
+              "날짜: ${diaryEntry.date.toIso8601String()}, Base64: ${diaryEntry.emoji != null ? '[데이터 있음]' : 'null'}",
+            );
           } catch (e) {
-            print("일기 개별 파싱 오류: $e");
+            print("❌ 일기 개별 파싱 오류: $e");
           }
         }
       });
     } catch (e) {
-      print('월별 일기 로드 실패 상세: $e');
+      print("❌ 월별 일기 로드 실패 상세: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -275,19 +292,29 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // _buildEmojiWidget 그대로 사용, 디코딩 + 오류 처리 포함
   Widget _buildEmojiWidget(String? emojiData) {
-    if (emojiData == null || emojiData.isEmpty) {
-      return const Icon(
-        Icons.mood, // 서버에 emoji 없을 때 기본 아이콘
-        size: 40,
-        color: Colors.grey,
-      );
+    if (emojiData == null || emojiData.trim().isEmpty) {
+      return const Icon(Icons.mood, size: 40, color: Colors.grey);
     }
 
     try {
-      final decoded = base64Decode(emojiData);
-      return Image.memory(decoded, width: 40, height: 40, fit: BoxFit.contain);
+      final normalized = base64.normalize(emojiData.trim());
+      final Uint8List decoded = base64Decode(normalized);
+
+      return Image.memory(
+        decoded,
+        width: 40,
+        height: 40,
+        fit: BoxFit.contain,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) {
+          print("Emoji decode error: $error");
+          return const Icon(Icons.mood_bad, size: 40, color: Colors.grey);
+        },
+      );
     } catch (e) {
+      print("Emoji decode exception: $e");
       return const Icon(Icons.mood_bad, size: 40, color: Colors.grey);
     }
   }
@@ -479,6 +506,12 @@ class _HomePageState extends State<HomePage> {
                       day.day,
                     );
                     final currentEntry = diaryEntries[normalizedDay];
+
+                    if (currentEntry != null) {
+                      print(
+                        "날짜: ${normalizedDay.toIso8601String()}, Base64: ${currentEntry.emoji}",
+                      );
+                    }
 
                     return GestureDetector(
                       onTap: () {

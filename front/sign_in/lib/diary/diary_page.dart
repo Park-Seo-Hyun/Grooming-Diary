@@ -37,6 +37,107 @@ class _DiaryPageState extends State<DiaryPage> {
     }
   }
 
+  Future<bool> _showSaveConfirmDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 30),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 30),
+              const Text(
+                '저장하시겠어요?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F74F8),
+                ),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                '작성한 내용이 일기에 저장됩니다.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 13,
+                  color: Color(0xFF1F74F8),
+                ),
+              ),
+              const SizedBox(height: 30),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => Navigator.pop(context, false),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(15),
+                      ),
+                      child: Container(
+                        height: 56,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF99BEF7),
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(15),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          '취소',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Pretendard',
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => Navigator.pop(context, true),
+                      borderRadius: const BorderRadius.only(
+                        bottomRight: Radius.circular(15),
+                      ),
+                      child: Container(
+                        height: 56,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF5A9AFF),
+                          borderRadius: BorderRadius.only(
+                            bottomRight: Radius.circular(15),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          '저장하기',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Pretendard',
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
   Future<void> _saveDiary() async {
     try {
       final diaryService = DiaryService();
@@ -303,7 +404,14 @@ class _DiaryPageState extends State<DiaryPage> {
                           elevation: 6, // ← 그림자 높이 조절 (0~24 정도)
                           shadowColor: Colors.black.withOpacity(0.5),
                         ),
-                        onPressed: _saveDiary,
+                        onPressed: () async {
+                          // 1. 저장 여부 팝업 띄우기
+                          final confirm = await _showSaveConfirmDialog();
+                          if (!confirm) return; // ❌ 취소 눌렀으면 저장 안함
+
+                          // 2. 확인 눌렀으면 저장 실행
+                          _saveDiary();
+                        },
                       ),
                     ),
                   ),
