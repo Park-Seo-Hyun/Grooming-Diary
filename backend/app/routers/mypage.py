@@ -24,7 +24,7 @@ EMOTION_WEIGHTS = {
     "Neutral": 1, # 중립
 }
 
-@router.get("/", response_model=mypageSchema.mypageResponse)
+@router.get("", response_model=mypageSchema.mypageResponse)
 def my_page(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)

@@ -19,9 +19,6 @@ from ..database import get_db
 from ..service import nlp_service, chatbot_service
 import calendar
 
-
-
-
 ## 1. 환경 변수에서 경로를 읽어옵니다. 
 TEMP_DIR_RELATIVE = os.getenv("PYTHON_TEMP_DIR", "app/temp_data")
 
@@ -52,9 +49,6 @@ def get_current_active_user(user_id: str = Depends(auth.get_current_user), db: S
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="사용자를 찾을 수 없습니다.")
     return user
-
-## 감정 점수 임계값 설정 (이 값 미만이면 'Neutral'로 처리)
-EMOTION_SCORE_THRESHOLD = 0.60
 
 ## 감정 중요도 가중치 (임시)
 EMOTION_WEIGHTS = {
@@ -256,17 +250,9 @@ def create_diary(
         
         ## DB 저장용 전체 감정 점수
         analysis_result['overall_emotion_score'] = raw_analysis['overall_emotion_score']
-        
-        ## 감정 점수가 임계값 미만일 경우, Neutral로 강제 처리 
-        if raw_analysis['emotion_score'] < EMOTION_SCORE_THRESHOLD:
-            analysis_result['emotion_label'] = "Neutral"
-            analysis_result['emotion_emoji'] = "default.png" 
-            analysis_result['emotion_score'] = raw_analysis['emotion_score'] ## 점수는 유지
-        else:
-            analysis_result = raw_analysis
             
         ## AI 코멘트 생성
-        ai_comment_text = chatbot_service.generate_comment(content, analysis_result['emotion_label'])
+        ai_comment_text = chatbot_service.generate_comment(content)
         
     except Exception as e:
         print(f"NLP/Chatbot Service Failed: {e}")
@@ -282,10 +268,10 @@ def create_diary(
         image_url=uploaded_image_url,
         
         ## 감정분석결과 저장
-        emotion_score=analysis_result['emotion_score'],
-        emotion_emoji=analysis_result['emotion_emoji'],
-        emotion_label=analysis_result['emotion_label'],
-        overall_emotion_score=analysis_result['overall_emotion_score'],
+        emotion_score=raw_analysis['emotion_score'],
+        emotion_emoji=raw_analysis['emotion_emoji'],
+        emotion_label=raw_analysis['emotion_label'],
+        overall_emotion_score=raw_analysis['overall_emotion_score'],
         
         ## AI봇 코멘트 결과
         ai_comment=ai_comment_text
@@ -383,18 +369,12 @@ def update_diary(
             raw_analysis = nlp_service.get_emotion_analysis(updated_content)
             
             analysis_result['overall_emotion_score'] = raw_analysis['overall_emotion_score']
-
-            if raw_analysis['emotion_score'] >= EMOTION_SCORE_THRESHOLD:
-                analysis_result['emotion_score'] = raw_analysis['emotion_score']
-                analysis_result['emotion_emoji'] = raw_analysis['emotion_emoji']
-                analysis_result['emotion_label'] = raw_analysis['emotion_label']
-            else:
-                analysis_result['emotion_score'] = raw_analysis['emotion_score']
-                analysis_result['emotion_label'] = "Neutral"
-                analysis_result['emotion_emoji'] = "default.png"
-
+            analysis_result['emotion_score'] = raw_analysis['emotion_score']
+            analysis_result['emotion_emoji'] = raw_analysis['emotion_emoji']
+            analysis_result['emotion_label'] = raw_analysis['emotion_label']
+            
             ## AI 코멘트 재생성
-            ai_comment_text = chatbot_service.generate_comment(updated_content, analysis_result['emotion_label'])
+            ai_comment_text = chatbot_service.generate_comment(updated_content)
 
         except Exception as e:
             print(f"NLP/Chatbot Service Failed: {e}")

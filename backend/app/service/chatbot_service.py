@@ -1,55 +1,37 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 import torch.nn.functional as F
 import os
 from typing import Dict, Any
 
-## ⚠️ FINAL FIX: 파인튜닝된 모델의 로컬 경로를 지정합니다.
-LOCAL_MODEL_PATH = r"D:/Grooming/backend/app/ai_model/fine_tuned_kogpt2_model" 
 
-# 🌟 사용자의 요청에 따라 'Tender'를 '행복'으로 매핑하여 수정함 🌟
-EMOTION_ENG_TO_KOR: Dict[str, str] = {
-    "Angry": "분노",
-    "Fear": "공포",
-    "Sad": "슬픔",
-    "Happy": "행복",
-    "Tender": "행복",
-    "Neutral": "중립"
-}
+LOCAL_MODEL_PATH = r"D:/Grooming/backend/app/ai_model/chatbot_model" 
 
-# -------------------------- 모델 및 토크나이저 로드 --------------------------
+
 LOAD_SUCCESS = False
 try:
+    # 1. KoBART 토크나이저 로드 (학습된 모델 경로에서 로드)
     tokenizer = AutoTokenizer.from_pretrained(LOCAL_MODEL_PATH)
 
-    DEVICE = torch.device("cpu")
-    tokenizer.pad_token = tokenizer.eos_token 
+    DEVICE = torch.device("cpu") # 배포 환경에 따라 "cuda" 또는 "cpu" 선택
     
-    model = AutoModelForCausalLM.from_pretrained(LOCAL_MODEL_PATH).to(DEVICE)
+    model = AutoModelForSeq2SeqLM.from_pretrained(LOCAL_MODEL_PATH).to(DEVICE)
     model.eval()
     
-    print(f"INFO: KoGPT-2 Empathy model loaded successfully from local path on {DEVICE}.")
+    print(f"INFO: KoBART Diary Comment model loaded successfully from local path on {DEVICE}.")
     LOAD_SUCCESS = True
 
 except Exception as e:
-    print(f"ERROR: Failed to load KoGPT-2 Empathy model from {LOCAL_MODEL_PATH}. Error: {e}")
+    print(f"ERROR: Failed to load KoBART model from {LOCAL_MODEL_PATH}. Error: {e}")
 
     def tokenizer(*args, **kwargs):
-        try:
-            temp_tokenizer = AutoTokenizer.from_pretrained("dlckdfuf141/empathy-kogpt2")
-            return temp_tokenizer(*args, **kwargs)
-        except Exception:
-            return {'input_ids': torch.tensor([[101, 102]]), 'attention_mask': torch.tensor([[1, 1]])}
+        # 최소한의 더미 출력을 반환
+        return {'input_ids': torch.tensor([[1]]), 'attention_mask': torch.tensor([[1]])}
     
     class DummyModel:
         def generate(self, input_ids, **kwargs):
-            dummy_text = "모델 로드 실패. 죄송합니다."
-            try:
-                temp_tokenizer = AutoTokenizer.from_pretrained("dlckdfuf141/empathy-kogpt2")
-                dummy_output = temp_tokenizer(dummy_text, return_tensors="pt").input_ids
-                return dummy_output
-            except Exception:
-                return torch.tensor([[101, 102]])
+            # 더미 출력 
+            return torch.tensor([[1, 512, 512]])
 
         def to(self, device): return self
         def eval(self): pass
@@ -59,58 +41,61 @@ except Exception as e:
     LOAD_SUCCESS = False
 
 
-def generate_comment(content: str, emotion_label: str) -> str:
+def generate_comment(content: str) -> str:
     if not LOAD_SUCCESS:
         return "현재 AI 챗봇 모델 로딩에 실패했습니다. 관리자에게 문의하세요."
         
-    korean_emotion = EMOTION_ENG_TO_KOR.get(emotion_label, "중립")
-    
-    prompt = (
-        f"감정: {korean_emotion}\n"
-        f"일기: {content}\n"
-        f"공감 메시지: "
-    )
+    prompt = content.strip() 
     
     try:
         inputs = tokenizer(prompt, return_tensors="pt").to(DEVICE)
         
-        MAX_NEW_TOKENS = 100
-        TEMPERATURE = 0.7
-        TOP_P = 0.95
+        # KoBART 생성 파라미터 최적화
+        MAX_NEW_TOKENS = 40
+        # TEMPERATURE = 0.7  <-- 제거됨
+        # TOP_P = 0.9        <-- 제거됨
+        REPETITION_PENALTY = 1.8
+        NO_REPEAT_NGRAM_SIZE = 2
+        
+
+        NUM_BEAMS = 7
+        NUM_RETURN_SEQUENCES = 3
+        
+        LENGTH_PENALTY = 2.0       # 답변 길이 유도
+        DIVERSITY_PENALTY = 0.5       # 후보군 간 다양성 확보
         
         with torch.no_grad():
             outputs = model.generate(
                 inputs.input_ids,
                 attention_mask=inputs.attention_mask,
                 max_new_tokens=MAX_NEW_TOKENS,
-                do_sample=True,
-                top_p=TOP_P,
-                temperature=TEMPERATURE,
+                do_sample=False,          
+                num_beams=NUM_BEAMS,     
+                num_return_sequences=NUM_RETURN_SEQUENCES,
+                length_penalty=LENGTH_PENALTY,            # 길이 보상
+                diversity_penalty=DIVERSITY_PENALTY,
+                repetition_penalty=REPETITION_PENALTY,
+                no_repeat_ngram_size=NO_REPEAT_NGRAM_SIZE,
                 pad_token_id=tokenizer.pad_token_id,
                 eos_token_id=tokenizer.eos_token_id,
-                num_return_sequences=1
             )
         
-        generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        candidates = [tokenizer.decode(output, skip_special_tokens=True).strip() for output in outputs]
+        generated_text = max(candidates, key=len)
         
-        # -------------------------------------------------------
-        # 🌟 FIX HERE: "친구의 반응:" → "공감 메시지:" 로 변경
-        # -------------------------------------------------------
-        response = generated_text.split("공감 메시지:")[-1].strip()
-        # -------------------------------------------------------
-
-        # 불필요한 프롬프트 잔여물 제거
-        if "일기 내용:" in response:
-            response = response.split("일기 내용:")[0].strip()
-            
-        if "사용자님의 답변을 듣고 어떤" in response:
-            return "에이, 기운 내 친구야! 너의 이야기를 들어줄게."
-            
+        response = generated_text.strip()
+        
+        # 2. 불필요한 공백 및 문장 잔여물 제거
         if "\n" in response:
             response = response.split("\n")[0].strip()
         
+        # 3. 마침표 추가 (깔끔한 코멘트를 위해)
+        if response and not response.endswith(('.', '!', '?')):
+            response += '.'
+            
+        # 4. 길이 제한
         if len(response) > 197:
-            return response[:197].strip() + "..."
+            response = response[:197].strip() + "..."
             
         return response
 
