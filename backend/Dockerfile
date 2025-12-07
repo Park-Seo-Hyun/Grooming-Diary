@@ -13,6 +13,8 @@ RUN apt-get update && \
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN pip install --upgrade python-jose
+
 COPY backend/app/ai_model /app/app/ai_model
 
 COPY backend/app /app/app
