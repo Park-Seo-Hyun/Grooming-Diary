@@ -1,7 +1,7 @@
 ## 1. 딥러닝 
 numpy
 scipy
-torch==2.9.1
+torch==2.4.0
 
 ## 2. AI 모델
 transformers==4.57.3
