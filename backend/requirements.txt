@@ -15,6 +15,8 @@ fastapi==0.122.0
 uvicorn[standard]==0.38.0
 python-multipart==0.0.9
 
+Pillow
+
 ## 5. 인증 및 유효성
 pydantic==2.12.5
 jose==1.0.0
