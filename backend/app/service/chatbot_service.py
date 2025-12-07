@@ -6,7 +6,10 @@ import os
 from typing import Dict, Any
 
 
-LOCAL_MODEL_PATH = r"D:/Grooming/backend/app/ai_model/chatbot_model" 
+LOCAL_MODEL_PATH = os.getenv(
+    "LOCAL_MODEL_PATH", 
+    "D:/Grooming/backend/app/ai_model/chatbot_model"
+)
 
 
 LOAD_SUCCESS = False

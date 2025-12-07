@@ -4,7 +4,10 @@ import torch.nn.functional as F
 import os
 from typing import Dict, Any
 
-FINE_TUNED_MODEL_PATH = r"D:/Grooming/backend/app/ai_model/fintunning_nlp" 
+LOCAL_NLP_MODEL_PATH = os.getenv(
+    "LOCAL_NLP_MODEL_PATH", 
+    "D:/Grooming/backend/app/ai_model/fintunning_nlp"
+)
 
 EMOTION_LABELS = {
     0: ("Angry", "angry.png"),
