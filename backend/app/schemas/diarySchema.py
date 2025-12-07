@@ -31,7 +31,7 @@ class DiaryResponse(BaseModel):
     emotion_label: str = Field(..., description="감정 레이블")
     overall_emotion_score: Dict[str, float] = Field(..., description="전체 감정 분포")
     
-    ai_comment: str = Field(..., max_length=200, description="AI 쳇봇 코멘트")
+    ai_comment: str = Field(..., description="AI 쳇봇 코멘트")
     
     created_at: datetime = Field(..., description="생성 시각")
     
@@ -46,7 +46,7 @@ class DiaryDetailResponse(BaseModel):
     diary_date: date = Field(..., description="일기 작성 날짜")
     primary_image_url: str = Field(..., description="달력에 표시할 최종 이미지 URL")
     content: str = Field(..., description="일기 내용")
-    ai_comment: str = Field(..., max_length=200, description="AI 쳇봇 코멘트")
+    ai_comment: str = Field(..., description="AI 쳇봇 코멘트")
     
     class Config:
         from_attributes = True
@@ -55,7 +55,7 @@ class DiaryDetailResponse(BaseModel):
 class CalendarResponse(BaseModel):
     id: str = Field(..., description="일기 UUID")
     diary_date: date = Field(..., description="일기 작성 날짜")
-    emotion_emoji: str = Field(..., max_length=255, description="감정 이모지")
+    emotion_emoji: str = Field(..., description="감정 이모지")
     
     class Config:
         from_attributes = True
