@@ -35,9 +35,10 @@ class _MyPageState extends State<MyPage> {
   }
 
   Future<void> handleLogout() async {
+    // 팝업 띄우기
     showDialog(
       context: context,
-      barrierDismissible: false, // 팝업 바깥 클릭 금지
+      barrierDismissible: false,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
@@ -45,24 +46,16 @@ class _MyPageState extends State<MyPage> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: SizedBox(
-            width: 160, // 정사각형 느낌
+            width: 160,
             height: 200,
             child: Padding(
-              padding: const EdgeInsets.all(12), // 내부 여백 조금 줄임
+              padding: const EdgeInsets.all(12),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // 이미지
                   if (myPageData != null)
-                    Image.asset(
-                      'assets/cloud.png',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                    ),
-
-                  const SizedBox(height: 10), // 간격 좁게
-                  // 안내 텍스트
+                    Image.asset('assets/cloud.png', width: 60, height: 60),
+                  const SizedBox(height: 10),
                   const Text(
                     "로그아웃..",
                     style: TextStyle(
@@ -72,9 +65,7 @@ class _MyPageState extends State<MyPage> {
                       color: Color(0xFF5A9AFF),
                     ),
                   ),
-
-                  const SizedBox(height: 10), // 간격 좁게
-                  // 로딩 원
+                  const SizedBox(height: 15),
                   const CircularProgressIndicator(
                     color: Color(0xFF4E93FF),
                     strokeWidth: 5,
@@ -87,27 +78,36 @@ class _MyPageState extends State<MyPage> {
       },
     );
 
-    // 3초 기다렸다가 로그아웃 처리 후 페이지 이동
+    // 2초 동안 팝업 유지
+    await Future.delayed(const Duration(seconds: 2));
+
+    // 실제 로그아웃
     await myPageService.authService.logout();
 
-    // 팝업 닫기
+    // 🔥 팝업 닫기
     if (mounted) Navigator.of(context).pop();
 
-    // 실제 로그아웃 수행
-
-    // 페이지 이동
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const MyApp()),
-      (route) => false,
-    );
+    // 🔥 팝업 닫힌 후 다음 프레임에 화면 이동 실행
+    //
+    //   WidgetsBinding.instance.addPostFrameCallback
+    //
+    // 이걸 쓰면 팝업 닫히는 애니메이션이 완전히 끝난 다음에
+    // 화면 이동이 실행되어 절대 팝업이 남지 않는다!
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MyApp()),
+        (route) => false,
+      );
+    });
   }
 
   Future<void> handleDeleteAccount() async {
-    // 팝업창 띄우기
+    // 로딩 팝업 띄우기
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (_) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -121,13 +121,7 @@ class _MyPageState extends State<MyPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (myPageData != null)
-                    Image.asset(
-                      'assets/cloud.png',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                    ),
+                  Image.asset('assets/cloud.png', width: 60, height: 60),
                   const SizedBox(height: 10),
                   const Text(
                     "그동안 감사했습니다.",
@@ -162,31 +156,27 @@ class _MyPageState extends State<MyPage> {
       },
     );
 
-    // 3초 기다린 뒤 회원 탈퇴 처리
-    await Future.delayed(const Duration(seconds: 3));
+    // 2초 후 화면 즉시 이동
+    await Future.delayed(const Duration(seconds: 2));
 
-    if (mounted) Navigator.of(context).pop(); // 팝업 닫기
+    if (!mounted) return;
 
-    // 실제 회원 탈퇴 수행
-    final success = await myPageService.authService.deleteAccount();
+    Navigator.of(context).pop(); // 로딩 팝업 닫기
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(success ? '회원 탈퇴 성공' : '회원 탈퇴 실패')),
-      );
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const MyApp()),
+      (route) => false,
+    );
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const MyApp()),
-        (route) => false,
-      );
-    }
+    // API는 뒤에서 처리
+    myPageService.authService.deleteAccount();
   }
 
   Future<void> _showDeleteAccountDialog() async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext ctx) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -197,7 +187,7 @@ class _MyPageState extends State<MyPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 30),
-              // --- 제목 ---
+
               const Text(
                 '정말 계정을 지우실 건가요?',
                 textAlign: TextAlign.center,
@@ -208,10 +198,11 @@ class _MyPageState extends State<MyPage> {
                   color: Color(0xFF1F74F8),
                 ),
               ),
+
               const SizedBox(height: 5),
-              // --- 내용 ---
+
               const Text(
-                '모든일기가 삭제되며, 복구할 수 없습니다.',
+                '모든 일기가 삭제되며, 복구할 수 없습니다.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Pretendard',
@@ -219,26 +210,27 @@ class _MyPageState extends State<MyPage> {
                   color: Color(0xFF1F74F8),
                 ),
               ),
+
               const SizedBox(height: 30),
-              // --- 버튼 영역 ---
+
               Row(
                 children: [
-                  // 1. 왼쪽 버튼 (취소)
-
-                  // 2. 오른쪽 버튼 (계정 지우기)
+                  // ---------------------------
+                  // (왼쪽) 계정 지우기 버튼 — 연한 색
+                  // ---------------------------
                   Expanded(
                     child: InkWell(
                       onTap: () {
-                        Navigator.of(context).pop(); // 다이얼로그 닫고
-                        handleDeleteAccount(); // 실제 탈퇴 + 로딩창 실행
+                        Navigator.of(context).pop(); // 다이얼로그 닫기
+                        handleDeleteAccount(); // 실제 탈퇴 + 로딩창
                       },
                       borderRadius: const BorderRadius.only(
-                        bottomRight: Radius.circular(15),
+                        bottomLeft: Radius.circular(15),
                       ),
                       child: Container(
                         height: 56,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF99BEF7),
+                          color: Color(0xFF99BEF7), // 연한 파랑
                           borderRadius: BorderRadius.only(
                             bottomLeft: Radius.circular(15),
                           ),
@@ -255,18 +247,22 @@ class _MyPageState extends State<MyPage> {
                       ),
                     ),
                   ),
+
+                  // ---------------------------
+                  // (오른쪽) 취소 버튼 — 진한 색
+                  // ---------------------------
                   Expanded(
                     child: InkWell(
                       onTap: () {
-                        Navigator.of(context).pop(); // 다이얼로그 닫기
+                        Navigator.of(context).pop(); // 닫기만
                       },
                       borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(15),
+                        bottomRight: Radius.circular(15),
                       ),
                       child: Container(
                         height: 56,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF5A9AFF),
+                          color: Color(0xFF5A9AFF), // 진한 파랑
                           borderRadius: BorderRadius.only(
                             bottomRight: Radius.circular(15),
                           ),

@@ -8,7 +8,10 @@ class AuthService {
   final String baseUrl = dotenv.env['BASE_URL']!;
 
   /// 🔐 로그인
-  Future<bool> login({required String userId, required String userPwd}) async {
+  Future<Map<String, dynamic>> login({
+    required String userId,
+    required String userPwd,
+  }) async {
     try {
       final url = Uri.parse('$baseUrl/auth/login');
       final response = await http.post(
@@ -23,22 +26,23 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final token = data['token']?['access_token'];
+        final userName = data['user_name'] ?? userId; // 서버에서 내려온 이름
 
         if (token != null && token.isNotEmpty) {
           await storage.write(key: 'jwt', value: token);
           print('✅ 로그인 성공(JWT 저장됨)');
-          return true;
+          return {'success': true, 'user_name': userName};
         } else {
           print('❌ 서버에 토큰이 없습니다.');
-          return false;
+          return {'success': false};
         }
       } else {
         print('❌ 로그인 실패: ${response.body}');
-        return false;
+        return {'success': false};
       }
     } catch (e) {
       print('❌ 로그인 오류: $e');
-      return false;
+      return {'success': false, 'error': e.toString()};
     }
   }
 
@@ -130,7 +134,7 @@ extension AuthServiceExtension on AuthService {
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 204) {
         await logout(); // 탈퇴 후 JWT 삭제
         print('✅ 회원 탈퇴 성공');
         return true;

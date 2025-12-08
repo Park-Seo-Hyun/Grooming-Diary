@@ -1,16 +1,15 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'diary/diary_entry.dart'; // 경로 확인 필요
+import 'package:shared_preferences/shared_preferences.dart';
+import 'diary/diary_entry.dart';
 import 'diary/diary_page.dart';
 import 'diary/diary_detail_page.dart';
 import 'graph/graph_page.dart';
 import 'write_page.dart';
 import 'my_page.dart';
 import 'navbar.dart';
-import 'services/diary_service.dart'; // 경로 확인 필요
+import 'services/diary_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,24 +19,32 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? _debugEmojiBase64;
   List<DiaryEntry> diaries = [];
-
   DateTime _focusedDay = DateTime.now();
   int _selectedIndex = 0;
 
-  // 날짜별 일기 데이터 관리
   final Map<DateTime, DiaryEntry> diaryEntries = {};
-
-  // 감정 점수
   num userEmotionScore = 0;
-
   final DiaryService _diaryService = DiaryService();
+
+  String userName = '사용자'; // 실제로 로그인 시 가져온 이름을 여기에 저장
 
   @override
   void initState() {
     super.initState();
+    _loadUserName();
     _loadMonthlyDiaries();
+  }
+
+  Future<void> _loadUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedName = prefs.getString('user_name');
+    if (savedName != null) {
+      setState(() {
+        userName = savedName;
+        print("🔍 로컬에서 불러온 사용자 이름: $userName");
+      });
+    }
   }
 
   DateTime get _firstDayOfMonth =>
@@ -55,8 +62,6 @@ class _HomePageState extends State<HomePage> {
     return _lastDayOfMonth.add(Duration(days: 6 - weekday));
   }
 
-  final Map<String, Map<DateTime, DiaryEntry>> _monthlyCache = {};
-
   Future<void> _loadMonthlyDiaries() async {
     String monthlyYear = DateFormat('yyyy-MM').format(_focusedDay);
     print("🔍 월별 일기 요청: $monthlyYear");
@@ -66,37 +71,34 @@ class _HomePageState extends State<HomePage> {
 
       if (!mounted) return;
 
+      print("서버 응답: $response");
+
       setState(() {
         diaryEntries.clear();
+        userEmotionScore = response['user_emotion_score'] is num
+            ? response['user_emotion_score']
+            : 0;
 
-        // 감정 점수
-        var rawScore = response['user_emotion_score'];
-        userEmotionScore = rawScore is num ? rawScore : 0;
+        print("🔍 사용자 이름 세팅: $userName, 감정 점수: $userEmotionScore");
 
-        // 다이어리 리스트
-        final List<dynamic> diaries =
+        if (userEmotionScore < 55) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showLowScorePopup();
+          });
+        }
+
+        final List<dynamic> diariesList =
             (response['diaries'] as List<dynamic>?) ?? [];
 
-        for (var item in diaries) {
+        for (var item in diariesList) {
           try {
-            // Homepage 전용 Base64 읽기
-            final diaryEntry = DiaryEntry.fromJson(
-              item,
-              fromHomepage: true,
-            ); // item 사용
-
+            final diaryEntry = DiaryEntry.fromJson(item); // URL 사용
             DateTime dateKey = DateTime(
               diaryEntry.date.year,
               diaryEntry.date.month,
               diaryEntry.date.day,
             );
-
             diaryEntries[dateKey] = diaryEntry;
-
-            // 확인용 출력
-            print(
-              "날짜: ${diaryEntry.date.toIso8601String()}, Base64: ${diaryEntry.emoji != null ? '[데이터 있음]' : 'null'}",
-            );
           } catch (e) {
             print("❌ 일기 개별 파싱 오류: $e");
           }
@@ -116,7 +118,6 @@ class _HomePageState extends State<HomePage> {
     final entry = diaryEntries[normalizedDay];
 
     if (entry != null) {
-      // 작성된 일기가 있으면 상세 페이지
       await Navigator.push(
         context,
         MaterialPageRoute(
@@ -156,7 +157,6 @@ class _HomePageState extends State<HomePage> {
             'diary_date': formattedDate,
             'content': text,
           }, imageFile);
-
           final createdEntry = DiaryEntry.fromJson(createdData);
 
           setState(() {
@@ -173,9 +173,107 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
+  Future<void> _showLowScorePopup() async {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: SizedBox(
+            height: 60,
+            child: Image.asset(
+              'assets/cloud.png',
+              color: Color(0xFFF44FBD),
+              colorBlendMode: BlendMode.srcIn,
+            ),
+          ),
+          content: Text(
+            '오늘도 $userName님의 추엇을 남기러 와주어서 고마워요.\n\n'
+            '요즘 마음이 많이 지쳐있으신 거 같아요.\n'
+            '이러한 감정 점수는 잘못된 것이 아닌 그만큼 마음이 지쳐있다는 작은 신호일 뿐이에요.\n\n'
+            '혹시 계속 힘든 감정이 이어진다면,\n전문가와 잠시 이야기 나누는 것도 도움이 될 수 있어요.\n\n'
+            '누군가에게 기대는 건 약함이 아니라, 지친 마음을 돌보는 아주 자연스러운 선택이에요.\n\n'
+            '당신의 마음이 조금이라도 더 편해지길 바랄게요.',
+            style: const TextStyle(
+              color: Color(0xFFF44FBD),
+              fontFamily: 'GyeonggiTitle',
+              fontSize: 16,
+            ),
+          ),
+          actionsPadding: EdgeInsets.zero,
+          actions: [
+            Row(
+              children: [
+                // 왼쪽 버튼: 취소
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).pop(); // 팝업 닫기
+                    },
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(15),
+                    ),
+                    child: Container(
+                      height: 56,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFC9F1), // 연한 하늘색
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(15),
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        '닫기',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Pretendard',
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 오른쪽 버튼: 그래프 페이지 이동
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).pop(); // 팝업 닫기
+                      _onItemTapped(1); // 그래프 페이지로 이동
+                    },
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(15),
+                    ),
+                    child: Container(
+                      height: 56,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF79CDF), // 진한 파란색
+                        borderRadius: BorderRadius.only(
+                          bottomRight: Radius.circular(15),
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        '그래프 보러 가기',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Pretendard',
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
+
+  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
 
   void _showYearMonthPicker() async {
     int selectedYear = _focusedDay.year;
@@ -292,31 +390,20 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // _buildEmojiWidget 그대로 사용, 디코딩 + 오류 처리 포함
-  Widget _buildEmojiWidget(String? emojiData) {
-    if (emojiData == null || emojiData.trim().isEmpty) {
+  Widget _buildEmojiWidget(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
       return const Icon(Icons.mood, size: 40, color: Colors.grey);
     }
-
-    try {
-      final normalized = base64.normalize(emojiData.trim());
-      final Uint8List decoded = base64Decode(normalized);
-
-      return Image.memory(
-        decoded,
-        width: 40,
-        height: 40,
-        fit: BoxFit.contain,
-        gaplessPlayback: true,
-        errorBuilder: (context, error, stackTrace) {
-          print("Emoji decode error: $error");
-          return const Icon(Icons.mood_bad, size: 40, color: Colors.grey);
-        },
-      );
-    } catch (e) {
-      print("Emoji decode exception: $e");
-      return const Icon(Icons.mood_bad, size: 40, color: Colors.grey);
-    }
+    return Image.network(
+      imageUrl,
+      width: 40,
+      height: 40,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        print("Emoji network load error: $error");
+        return const Icon(Icons.mood_bad, size: 40, color: Colors.grey);
+      },
+    );
   }
 
   @override
@@ -333,7 +420,6 @@ class _HomePageState extends State<HomePage> {
       days.add(day);
     }
 
-    // ✅ 현재 년-월 문자열 미리 생성
     final String currentYearMonth = DateFormat('yyyy-MM').format(_focusedDay);
 
     List<Widget> pages = [
@@ -341,10 +427,8 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-
             Stack(
               children: [
-                // 기존 연도 있는 Row
                 Row(
                   children: [
                     Padding(
@@ -372,10 +456,8 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(width: 60),
                   ],
                 ),
-
-                // ← 여기 구르밍 점수만 Stack 위에 Positioned로 자유 배치 가능
                 Positioned(
-                  right: 20, // ← 너가 원하는 만큼 움직이면 됨
+                  right: 20,
                   top: 50,
                   child: Text(
                     '구르밍 점수: $userEmotionScore 점',
@@ -507,12 +589,6 @@ class _HomePageState extends State<HomePage> {
                     );
                     final currentEntry = diaryEntries[normalizedDay];
 
-                    if (currentEntry != null) {
-                      print(
-                        "날짜: ${normalizedDay.toIso8601String()}, Base64: ${currentEntry.emoji}",
-                      );
-                    }
-
                     return GestureDetector(
                       onTap: () {
                         if (!isFutureDay) _onDayTapped(day);
@@ -555,7 +631,7 @@ class _HomePageState extends State<HomePage> {
                               Positioned(
                                 right: 7,
                                 bottom: 9,
-                                child: _buildEmojiWidget(currentEntry.emoji),
+                                child: _buildEmojiWidget(currentEntry.emojiUrl),
                               ),
                           ],
                         ),
@@ -569,15 +645,17 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      GraphPage(initialYearMonth: currentYearMonth), // ✅ 수정 완료
+      GraphPage(initialYearMonth: currentYearMonth),
       WritePage(),
       const MyPage(),
     ];
 
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         centerTitle: true,
         backgroundColor: Colors.white,
+        leading: Container(),
         title: SizedBox(height: 60, child: Image.asset('assets/cloud.png')),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(5.0),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -26,6 +28,9 @@ class _DiaryPageState extends State<DiaryPage> {
     super.initState();
     _controller = TextEditingController(text: widget.initialEntry?.text ?? '');
     _selectedImage = widget.initialEntry?.localImageFile;
+    _controller.addListener(() {
+      setState(() {}); // 글자가 바뀔 때마다 build 재실행
+    });
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -37,105 +42,93 @@ class _DiaryPageState extends State<DiaryPage> {
     }
   }
 
-  Future<bool> _showSaveConfirmDialog() async {
-    final result = await showDialog<bool>(
+  Future<void> _showAnalyzingDialog() async {
+    double progress = 0;
+    Timer? timer;
+
+    showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) {
+      builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 30),
-              const Text(
-                '저장하시겠어요?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F74F8),
-                ),
-              ),
-              const SizedBox(height: 5),
-              const Text(
-                '작성한 내용이 일기에 저장됩니다.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 13,
-                  color: Color(0xFF1F74F8),
-                ),
-              ),
-              const SizedBox(height: 30),
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => Navigator.pop(context, false),
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(15),
-                      ),
-                      child: Container(
-                        height: 56,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF99BEF7),
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(15),
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          '취소',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Pretendard',
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 50),
+          child: SizedBox(
+            width: 200,
+            height: 250,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 20),
+                const Text(
+                  "일기를 분석하고 있습니다.",
+                  style: TextStyle(
+                    fontFamily: 'GyeonggiTitle',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF297BFB),
                   ),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => Navigator.pop(context, true),
-                      borderRadius: const BorderRadius.only(
-                        bottomRight: Radius.circular(15),
-                      ),
-                      child: Container(
-                        height: 56,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF5A9AFF),
-                          borderRadius: BorderRadius.only(
-                            bottomRight: Radius.circular(15),
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          '저장하기',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Pretendard',
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(height: 60, child: Image.asset('assets/cloud.png')),
+
+                const SizedBox(height: 20),
+                const Text(
+                  "로딩중. .",
+                  style: TextStyle(
+                    fontFamily: 'GyeonggiTitle',
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF5A9AFF),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 20),
+                StatefulBuilder(
+                  builder: (context, setState) {
+                    if (timer == null) {
+                      const totalMs = 7000; // 5초
+                      const tickMs = 20; // 20ms마다 갱신
+                      final totalTicks = totalMs / tickMs; // 총 갱신 횟수
+                      final step = 1 / totalTicks * 5.0; // 매번 증가량
+
+                      timer = Timer.periodic(
+                        const Duration(milliseconds: tickMs),
+                        (t) {
+                          if (progress >= 1) {
+                            t.cancel();
+                            Navigator.pop(context); // 팝업 닫기
+                          } else {
+                            setState(() {
+                              progress += step;
+                              if (progress > 1) progress = 1; // 마지막은 정확히 1
+                            });
+                          }
+                        },
+                      );
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 10,
+                        backgroundColor: const Color(0xFFE9F0FB),
+                        color: const Color(0xFF5A9AFF),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
-    );
-
-    return result ?? false;
+    ).then((_) {
+      timer?.cancel(); // 팝업 종료 시 Timer 안전하게 취소
+    });
   }
 
   Future<void> _saveDiary() async {
@@ -406,10 +399,10 @@ class _DiaryPageState extends State<DiaryPage> {
                         ),
                         onPressed: () async {
                           // 1. 저장 여부 팝업 띄우기
-                          final confirm = await _showSaveConfirmDialog();
-                          if (!confirm) return; // ❌ 취소 눌렀으면 저장 안함
+                          // 1. 분석 팝업 띄우고 3초 동안 진행
+                          await _showAnalyzingDialog();
 
-                          // 2. 확인 눌렀으면 저장 실행
+                          // 2. 팝업 종료 후 바로 저장
                           _saveDiary();
                         },
                       ),

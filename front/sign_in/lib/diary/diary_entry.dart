@@ -1,35 +1,38 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:sign_in/diary/diary_entry_detail.dart';
+
 class DiaryEntry {
   final String id;
   final DateTime date;
-  final String? emoji; // 이제 URL 기준
-  final String? text;
+  final String? emojiUrl; // 네트워크 이미지 URL
+  final String? text; // 서버의 content
   final String? aiComment;
   final String userName;
 
   DiaryEntry({
     required this.id,
     required this.date,
-    this.emoji,
+    this.emojiUrl,
     this.text,
     this.aiComment,
     required this.userName,
   });
 
+  // DiaryEntryDetail → DiaryEntry 변환용
   factory DiaryEntry.fromDetail(DiaryEntryDetail detail) {
     return DiaryEntry(
       id: detail.id,
       date: detail.date,
-      emoji: detail.imageUrl, // 이제 URL
+      emojiUrl: detail.imageUrl, // URL로 가져오기
       text: detail.text,
       aiComment: detail.aiComment,
       userName: detail.userName,
     );
   }
 
-  factory DiaryEntry.fromJson(
-    Map<String, dynamic> json, {
-    bool fromHomepage = false,
-  }) {
+  // JSON → DiaryEntry (네트워크 URL 전용)
+  factory DiaryEntry.fromJson(Map<String, dynamic> json) {
+    // 날짜 파싱
     DateTime parsedDate;
     try {
       parsedDate = DateTime.parse(json['diary_date']?.toString() ?? '');
@@ -37,20 +40,21 @@ class DiaryEntry {
       parsedDate = DateTime.now();
     }
 
-    String? imageData;
+    // BASE_URL + 상대 경로 처리
+    final String baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:3000';
+    String? emojiUrl =
+        json['emotion_emoji']?.toString() ??
+        json['primary_image_url']?.toString();
 
-    if (fromHomepage) {
-      // 홈페이지용 Base64
-      imageData = json['emotion_emoji']?.toString();
-    } else {
-      // URL 기반
-      imageData = json['primary_image_url']?.toString();
+    if (emojiUrl != null && !emojiUrl.startsWith('http')) {
+      // 상대 경로이면 BASE_URL 붙이기
+      emojiUrl = '$baseUrl$emojiUrl';
     }
 
     return DiaryEntry(
       id: json['id']?.toString() ?? '',
       date: parsedDate,
-      emoji: imageData,
+      emojiUrl: emojiUrl,
       text: json['content']?.toString() ?? '',
       aiComment: json['ai_comment']?.toString(),
       userName: json['user_name']?.toString() ?? '사용자',
@@ -61,7 +65,7 @@ class DiaryEntry {
     return {
       'id': id,
       'diary_date': date.toIso8601String(),
-      'primary_image_url': emoji,
+      'primary_image_url': emojiUrl,
       'content': text,
       'ai_comment': aiComment,
       'user_name': userName,

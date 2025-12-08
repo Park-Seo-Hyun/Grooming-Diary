@@ -51,6 +51,77 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  void _showModifySuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 400, // 옆으로 길게
+                maxHeight: 180, // 높이는 조금 낮춰서 overflow 방지
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.red[200],
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_outline,
+                      size: 40,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "수정이 완료되었습니다!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        "확인",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // 저장/수정 통합 로직
   Future<void> handleSaveOrModify() async {
     final textToSave = _controller.text.trim();
@@ -70,6 +141,8 @@ class _ChatPageState extends State<ChatPage> {
         _controller.clear();
       });
       if (mounted) FocusScope.of(context).unfocus();
+
+      _showModifySuccessDialog(context);
     }
   }
 
@@ -314,16 +387,14 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     // ✅ [PopScope 적용] 뒤로가기 제어
-    return PopScope(
+    return WillPopScope(
       // 쓰기 모드(write)일 때는 맘대로 못 나감(false), 읽기 모드(read)면 자유롭게 나감(true)
-      canPop: currentMode == "read",
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return; // 이미 나갔으면 무시
-
-        // 쓰기 모드라면 팝업 띄우기
+      onWillPop: () async {
         if (currentMode == "write") {
-          await _showExitDialog();
+          await _showExitDialog(); // 팝업 띄우기
+          return false; // 실제 페이지는 안 나가게
         }
+        return true; // 읽기 모드는 자유롭게
       },
       child: Scaffold(
         appBar: AppBar(

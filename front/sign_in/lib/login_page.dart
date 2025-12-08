@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,13 +28,14 @@ class _LoginPageState extends State<LoginPage> {
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
+          backgroundColor: Color(0xFFFFFFFF),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.0),
           ),
           title: const Text(
             "로그인 성공",
             style: TextStyle(
-              fontFamily: 'Gyeonggibatang',
+              fontFamily: 'GyeonggiTitle',
               fontWeight: FontWeight.bold,
               fontSize: 25,
               color: Color(0xFF5A9AFF),
@@ -104,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                       message,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Colors.red,
                       ),
@@ -146,9 +148,20 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       /// AuthService.login(user_id, user_pwd)
-      bool success = await _authService.login(userId: userId, userPwd: userPwd);
+      final loginResult = await _authService.login(
+        userId: userId,
+        userPwd: userPwd,
+      );
 
-      if (success) {
+      if (loginResult['success'] == true) {
+        // 서버에서 내려온 사용자 이름
+        final actualName = loginResult['user_name'] ?? userId;
+
+        // SharedPreferences에 저장
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_name', actualName);
+
+        print('🔍 사용자 이름 세팅: $actualName'); // 디버그용
         _showSuccessDialog(context);
       } else {
         _showLoginFailDialog(context, "아이디 또는 비밀번호가 잘못되었습니다.");
