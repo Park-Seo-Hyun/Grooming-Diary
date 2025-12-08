@@ -4,22 +4,23 @@ scipy
 torch==2.4.0
 
 ## 2. AI 모델
+sentencepiece
 transformers==4.57.3
 
 ## 3. DB
 SQLAlchemy==2.0.39
 mysql-connector-python==8.0.33
+cryptography
 
 ## 4. 웹프레임워크
 fastapi==0.122.0
 uvicorn[standard]==0.38.0
 python-multipart==0.0.9
-
 Pillow
 
 ## 5. 인증 및 유효성
 pydantic==2.12.5
-jose==1.0.0
+python-jose==1.0.0
 passlib==1.7.4
 python-dotenv==1.2.1
 
