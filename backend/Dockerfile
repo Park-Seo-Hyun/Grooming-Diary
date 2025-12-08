@@ -7,7 +7,9 @@ ENV UPLOAD_DIR /app/app/images
 WORKDIR /app
 
 RUN apt-get update && \
-    apt-get install -y build-essential gcc curl libgfortran5 && \
+    apt-get install -y \
+    build-essential gcc curl libgfortran5 \
+    libopenblas-dev libblas-dev liblapack-dev && \ 
     rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt .
