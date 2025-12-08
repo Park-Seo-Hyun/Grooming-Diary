@@ -33,16 +33,16 @@ try:
     
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
-    model = AutoModelForSequenceClassification.from_pretrained(FINE_TUNED_MODEL_PATH, trust_remote_code=True).to(DEVICE)
+    model = AutoModelForSequenceClassification.from_pretrained(LOCAL_NLP_MODEL_PATH, trust_remote_code=True).to(DEVICE)
     model.eval() # 추론 모드로 설정
     
-    print(f"INFO: Fine-tuned NLP model loaded successfully from {FINE_TUNED_MODEL_PATH} on {DEVICE}.")
+    print(f"INFO: Fine-tuned NLP model loaded successfully from {LOCAL_NLP_MODEL_PATH} on {DEVICE}.")
     LOAD_SUCCESS = True
 except ImportError:
     print(f"ERROR: 'transformers' 라이브러리가 설치되지 않았습니다.")
     LOAD_SUCCESS = False
 except OSError as e:
-    print(f"ERROR: Failed to load NLP model from {FINE_TUNED_MODEL_PATH}. 경로 및 파일 존재 여부 확인 필요. 상세 오류: {e}")
+    print(f"ERROR: Failed to load NLP model from {LOCAL_NLP_MODEL_PATH}. 경로 및 파일 존재 여부 확인 필요. 상세 오류: {e}")
     LOAD_SUCCESS = False
 except Exception as e:
     print(f"ERROR: Failed to load NLP model: {e}")
