@@ -58,19 +58,6 @@ EMOTION_WEIGHTS = {
     "Neutral": 1.0, # 중립
 }
 
-def convert_png_to_webp(filename: str) -> str:
-    png_path = os.path.join(EMOJI_DIR, filename)
-    webp_filename = filename.replace(".png", ".webp")
-    webp_path = os.path.join(EMOJI_DIR, webp_filename)
-    
-    if os.path.exists(webp_path):
-        return webp_filename
-    
-    img = Image.open(png_path).convert("RGBA")
-    img.save(webp_path, "WEBP", lossless=True, quality=100)
-    
-    return webp_filename
-
 ## helper function
 def create_diary_response(diary: Diary, user_name: str) -> dict:
     
@@ -224,11 +211,12 @@ def get_all_diaries(
     calendar_diaries = []
 
     for entry in all_diaries:
-        web_name = convert_png_to_webp(entry.emotion_emoji)
+        web_name = entry.emotion_label.lower()
+        
         calendar_diaries.append(diarySchema.CalendarResponse(
             id=entry.id,
             diary_date=entry.diary_date,
-            emotion_emoji=f"/static/emoji/{web_name}"
+            emotion_emoji=f"/static/emoji/{web_name}.webp"
         ))
         
     return {
