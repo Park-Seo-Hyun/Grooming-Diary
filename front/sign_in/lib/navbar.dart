@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -19,7 +20,7 @@ class CustomBottomNavBar extends StatelessWidget {
         color: Colors.white,
         border: Border(top: BorderSide(color: Color(0xFFEEEEEE), width: 5.0)),
       ),
-      height: 65,
+      height: 65.h, // ScreenUtil 적용
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -27,7 +28,7 @@ class CustomBottomNavBar extends StatelessWidget {
             onPressed: () => onTap(0),
             icon: Image.asset(
               'assets/calendar.png',
-              height: 38,
+              height: 38.h, // ScreenUtil 적용
               color: selectedIndex == 0
                   ? primaryColor
                   : const Color(0xFFD9D9D9),
@@ -37,7 +38,7 @@ class CustomBottomNavBar extends StatelessWidget {
             onPressed: () => onTap(1),
             icon: Image.asset(
               'assets/graph.png',
-              height: 38,
+              height: 38.h, // ScreenUtil 적용
               color: selectedIndex == 1
                   ? primaryColor
                   : const Color(0xFFD9D9D9),
@@ -47,7 +48,7 @@ class CustomBottomNavBar extends StatelessWidget {
             onPressed: () => onTap(2),
             icon: Image.asset(
               'assets/write.png',
-              height: 38,
+              height: 38.h, // ScreenUtil 적용
               color: selectedIndex == 2
                   ? primaryColor
                   : const Color(0xFFD9D9D9),
@@ -57,7 +58,7 @@ class CustomBottomNavBar extends StatelessWidget {
             onPressed: () => onTap(3),
             icon: Image.asset(
               'assets/mypage.png',
-              height: 38,
+              height: 38.h, // ScreenUtil 적용
               color: selectedIndex == 3
                   ? primaryColor
                   : const Color(0xFFD9D9D9),

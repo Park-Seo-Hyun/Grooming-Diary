@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'services/chat_service.dart';
 import 'bubble_tail.dart';
 
@@ -42,7 +43,6 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       answerText = fetched ?? '';
       isLoading = false;
-
       if (answerText != null && answerText!.isNotEmpty) {
         currentMode = "read";
       } else {
@@ -61,42 +61,39 @@ class _ChatPageState extends State<ChatPage> {
           child: Align(
             alignment: Alignment.bottomCenter,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 400, // 옆으로 길게
-                maxHeight: 180, // 높이는 조금 낮춰서 overflow 방지
-              ),
+              constraints: BoxConstraints(maxWidth: 400.w, maxHeight: 180.h),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(20.w),
                 decoration: BoxDecoration(
                   color: Colors.red[200],
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(15.r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.2),
                       blurRadius: 10,
-                      offset: const Offset(0, 5),
+                      offset: Offset(0, 5),
                     ),
                   ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.check_circle_outline,
-                      size: 40,
+                      size: 40.sp,
                       color: Colors.red,
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
+                    SizedBox(height: 10.h),
+                    Text(
                       "수정이 완료되었습니다!",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 17,
+                        fontSize: 17.sp,
                         fontWeight: FontWeight.bold,
                         color: Colors.red,
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15.h),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pop(dialogContext);
@@ -104,13 +101,10 @@ class _ChatPageState extends State<ChatPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(8.r),
                         ),
                       ),
-                      child: const Text(
-                        "확인",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: Text("확인", style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
@@ -122,7 +116,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // 저장/수정 통합 로직
   Future<void> handleSaveOrModify() async {
     final textToSave = _controller.text.trim();
     if (textToSave.isEmpty) return;
@@ -141,12 +134,10 @@ class _ChatPageState extends State<ChatPage> {
         _controller.clear();
       });
       if (mounted) FocusScope.of(context).unfocus();
-
       _showModifySuccessDialog(context);
     }
   }
 
-  // ✅ [수정됨] 뒤로가기 시 실행될 팝업창 (텍스트 중앙 정렬 적용)
   Future<void> _showExitDialog() async {
     return showDialog<void>(
       context: context,
@@ -154,101 +145,89 @@ class _ChatPageState extends State<ChatPage> {
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.white,
-          // 팝업창 전체 둥근 모서리
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(15.r),
           ),
-          // 📌 [포인트 1] 팝업창 너비 늘리기 (좌우 여백을 20으로 줄임)
-          insetPadding: const EdgeInsets.symmetric(horizontal: 30),
-
+          insetPadding: EdgeInsets.symmetric(horizontal: 30.w),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // 내용물만큼만 높이 잡기
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 30), // 상단 여백
-              // --- 제목 ---
-              const Text(
+              SizedBox(height: 30.h),
+              Text(
                 '그만 작성하실 건가요?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Pretendard',
-                  fontSize: 24, // 크기 살짝 조정 (너무 크면 줄바꿈 될 수 있음)
+                  fontSize: 24.sp,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1F74F8),
                 ),
               ),
-              const SizedBox(height: 5),
-
-              // --- 내용 ---
-              const Text(
+              SizedBox(height: 5.h),
+              Text(
                 '작성 중인 일기는 저장되지 않습니다.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Pretendard',
-                  fontSize: 13,
+                  fontSize: 13.sp,
                   color: Color(0xFF1F74F8),
                 ),
               ),
-              const SizedBox(height: 30), // 버튼과 내용 사이 여백
-              // --- 버튼 영역 (꽉 차게) ---
+              SizedBox(height: 30.h),
               Row(
                 children: [
-                  // 1. 왼쪽 버튼 (나가기)
                   Expanded(
                     child: InkWell(
                       onTap: () {
-                        Navigator.of(context).pop(); // 다이얼로그 닫기
-                        Navigator.of(context).pop(); // 페이지 뒤로가기
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
                       },
-                      // 📌 [포인트 2] 왼쪽 아래만 둥글게
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(15),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(15.r),
                       ),
                       child: Container(
-                        height: 56, // 버튼 높이 지정
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF99BEF7), // 연한 하늘색 (Hex 코드 오타 수정함)
+                        height: 56.h,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF99BEF7),
                           borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(15),
+                            bottomLeft: Radius.circular(15.r),
                           ),
                         ),
                         alignment: Alignment.center,
-                        child: const Text(
+                        child: Text(
                           '나가기',
                           style: TextStyle(
-                            color: Color(0xFFFFFFFF),
+                            color: Colors.white,
                             fontFamily: 'Pretendard',
-                            fontSize: 18,
+                            fontSize: 18.sp,
                           ),
                         ),
                       ),
                     ),
                   ),
-
-                  // 2. 오른쪽 버튼 (계속 작성하기)
                   Expanded(
                     child: InkWell(
                       onTap: () {
-                        Navigator.of(context).pop(); // 다이얼로그만 닫기
+                        Navigator.of(context).pop();
                       },
-                      // 📌 [포인트 3] 오른쪽 아래만 둥글게
-                      borderRadius: const BorderRadius.only(
-                        bottomRight: Radius.circular(15),
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(15.r),
                       ),
                       child: Container(
-                        height: 56, // 버튼 높이
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF5A9AFF), // 진한 파란색
+                        height: 56.h,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF5A9AFF),
                           borderRadius: BorderRadius.only(
-                            bottomRight: Radius.circular(15),
+                            bottomRight: Radius.circular(15.r),
                           ),
                         ),
                         alignment: Alignment.center,
-                        child: const Text(
+                        child: Text(
                           '계속 작성하기',
                           style: TextStyle(
                             color: Colors.white,
                             fontFamily: 'Pretendard',
-                            fontSize: 18,
+                            fontSize: 18.sp,
                           ),
                         ),
                       ),
@@ -263,7 +242,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // 말풍선 위젯
   Widget buildBubble({required String text, required bool isQuestion}) {
     double screenWidth = MediaQuery.of(context).size.width;
     double bubbleMaxWidth = screenWidth * 0.8;
@@ -276,41 +254,40 @@ class _ChatPageState extends State<ChatPage> {
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.w),
               margin: isQuestion
-                  ? const EdgeInsets.only(left: 25, right: 8, top: 8, bottom: 8)
-                  : const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  ? EdgeInsets.only(
+                      left: 25.w,
+                      right: 8.w,
+                      top: 8.h,
+                      bottom: 8.h,
+                    )
+                  : EdgeInsets.symmetric(vertical: 8.h, horizontal: 8.w),
               decoration: BoxDecoration(
-                color: isQuestion
-                    ? const Color(0xFFFFEAFF)
-                    : const Color(0xFFE9F0FB),
-                borderRadius: BorderRadius.circular(16),
+                color: isQuestion ? Color(0xFFFFEAFF) : Color(0xFFE9F0FB),
+                borderRadius: BorderRadius.circular(16.r),
               ),
               child: Text(
                 text,
                 softWrap: true,
                 style: TextStyle(
-                  fontSize: 15,
-                  color: const Color(0xFF626262),
-                  fontFamily: isQuestion
-                      ? 'GyeonggiTitle' // 질문 폰트
-                      : 'GyeonggiBatang', // 대답 폰트
+                  fontSize: 15.sp,
+                  color: Color(0xFF626262),
+                  fontFamily: isQuestion ? 'GyeonggiTitle' : 'GyeonggiBatang',
                 ),
               ),
             ),
           ),
           Positioned(
-            bottom: -10,
-            left: isQuestion ? 40 : null,
-            right: isQuestion ? null : 20,
+            bottom: -10.h,
+            left: isQuestion ? 40.w : null,
+            right: isQuestion ? null : 20.w,
             child: CustomPaint(
               painter: BubbleTailPainter(
-                color: isQuestion
-                    ? const Color(0xFFFFEAFF)
-                    : const Color(0xFFE9F0FB),
+                color: isQuestion ? Color(0xFFFFEAFF) : Color(0xFFE9F0FB),
                 isQuestion: isQuestion,
               ),
-              size: const Size(20, 20),
+              size: Size(20.w, 20.h),
             ),
           ),
         ],
@@ -318,7 +295,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // 입력창 위젯
   Widget buildUserInput() {
     double screenWidth = MediaQuery.of(context).size.width;
     double bubbleMaxWidth = screenWidth * 0.8;
@@ -331,27 +307,27 @@ class _ChatPageState extends State<ChatPage> {
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
             child: Container(
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: EdgeInsets.all(16.w),
+              margin: EdgeInsets.symmetric(vertical: 8.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFE9F0FB),
-                borderRadius: BorderRadius.circular(20),
+                color: Color(0xFFE9F0FB),
+                borderRadius: BorderRadius.circular(20.r),
               ),
               child: TextField(
                 controller: _controller,
                 maxLines: 4,
                 maxLength: 50,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'GyeonggiBatang',
-                  fontSize: 15,
+                  fontSize: 15.sp,
                   color: Color(0xFF626262),
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: '질문에 답장해주세요!',
                   hintStyle: TextStyle(
                     color: Color(0xFFAAA7A7),
                     fontFamily: 'GyeonggiBatang',
-                    fontSize: 15,
+                    fontSize: 15.sp,
                   ),
                   border: InputBorder.none,
                   counterText: '',
@@ -361,22 +337,22 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           Positioned(
-            bottom: -10,
-            right: 20,
+            bottom: -10.h,
+            right: 20.w,
             child: CustomPaint(
               painter: BubbleTailPainter(
-                color: const Color(0xFFE9F0FB),
+                color: Color(0xFFE9F0FB),
                 isQuestion: false,
               ),
-              size: const Size(20, 20),
+              size: Size(20.w, 20.h),
             ),
           ),
           Positioned(
-            right: 20,
-            bottom: 15,
+            right: 20.w,
+            bottom: 15.h,
             child: Text(
               '${_controller.text.length}/50',
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(fontSize: 16.sp, color: Colors.grey),
             ),
           ),
         ],
@@ -386,81 +362,78 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ [PopScope 적용] 뒤로가기 제어
     return WillPopScope(
-      // 쓰기 모드(write)일 때는 맘대로 못 나감(false), 읽기 모드(read)면 자유롭게 나감(true)
       onWillPop: () async {
         if (currentMode == "write") {
-          await _showExitDialog(); // 팝업 띄우기
-          return false; // 실제 페이지는 안 나가게
+          await _showExitDialog();
+          return false;
         }
-        return true; // 읽기 모드는 자유롭게
+        return true;
       },
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
           backgroundColor: Colors.white,
           title: SizedBox(
-            height: 60,
+            height: 60.h,
             child: Image.asset(
               'assets/cloud.png',
               errorBuilder: (context, error, stackTrace) {
-                return const Text(
+                return Text(
                   'Cloud',
-                  style: TextStyle(fontSize: 24, color: Colors.grey),
+                  style: TextStyle(fontSize: 24.sp, color: Colors.grey),
                 );
               },
             ),
           ),
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(1.0),
-            child: Container(color: const Color(0xFFEEEEEE), height: 5.0),
+            preferredSize: Size.fromHeight(1.0.h),
+            child: Container(color: Color(0xFFEEEEEE), height: 5.h),
           ),
           elevation: 0.0,
         ),
         body: isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 10),
-                      const Center(
+                      SizedBox(height: 15.h),
+                      Center(
                         child: Text(
                           "긍정 이야기",
                           style: TextStyle(
                             fontFamily: 'GyeonggiBatang',
-                            fontSize: 32,
+                            fontSize: 32.sp,
                             color: Color(0xFF1A6DFF),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 60),
+                      SizedBox(height: 45.h),
                       Text(
                         "      #${widget.questionNumber.toString().padLeft(2, '0')}번째 질문",
-                        style: const TextStyle(
-                          fontSize: 15,
+                        style: TextStyle(
+                          fontSize: 15.sp,
                           color: Color(0xFF626262),
                           fontFamily: 'GyeonggiTitle',
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 15),
+                      SizedBox(height: 15.h),
                       buildBubble(text: widget.questionText, isQuestion: true),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20.h),
 
-                      // ✅ 읽기 모드 & 답변 존재
                       if (answerText != null &&
                           answerText!.isNotEmpty &&
                           currentMode == "read") ...[
                         buildBubble(text: answerText!, isQuestion: false),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20.h),
                         Align(
                           alignment: Alignment.bottomRight,
                           child: Padding(
-                            padding: const EdgeInsets.only(right: 25.0),
+                            padding: EdgeInsets.only(right: 25.w),
                             child: ElevatedButton(
                               onPressed: () {
                                 setState(() {
@@ -468,17 +441,17 @@ class _ChatPageState extends State<ChatPage> {
                                   _controller.text = answerText ?? '';
                                 });
                               },
-                              child: const Text('수정'),
+                              child: Text('수정'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF5A9AFF),
+                                backgroundColor: Color(0xFF5A9AFF),
                                 foregroundColor: Colors.white,
-                                minimumSize: const Size(70, 30),
+                                minimumSize: Size(70.w, 30.h),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(10.r),
                                 ),
-                                textStyle: const TextStyle(
+                                textStyle: TextStyle(
                                   fontFamily: 'gyeonggiTitle',
-                                  fontSize: 18,
+                                  fontSize: 18.sp,
                                 ),
                               ),
                             ),
@@ -486,36 +459,35 @@ class _ChatPageState extends State<ChatPage> {
                         ),
                       ],
 
-                      // ✅ 쓰기 모드
                       if (currentMode == "write") ...[
                         buildUserInput(),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20.h),
                         Align(
                           alignment: Alignment.bottomRight,
                           child: Padding(
-                            padding: const EdgeInsets.only(right: 25.0),
+                            padding: EdgeInsets.only(right: 25.w),
                             child: ElevatedButton(
                               onPressed: _controller.text.trim().isEmpty
                                   ? null
                                   : handleSaveOrModify,
-                              child: const Text('저장'),
+                              child: Text('저장'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF5A9AFF),
+                                backgroundColor: Color(0xFF5A9AFF),
                                 foregroundColor: Colors.white,
-                                minimumSize: const Size(70, 30),
+                                minimumSize: Size(70.w, 30.h),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(10.r),
                                 ),
-                                textStyle: const TextStyle(
+                                textStyle: TextStyle(
                                   fontFamily: 'gyeonggiTitle',
-                                  fontSize: 18,
+                                  fontSize: 18.sp,
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ],
-                      const SizedBox(height: 50),
+                      SizedBox(height: 50.h),
                     ],
                   ),
                 ),

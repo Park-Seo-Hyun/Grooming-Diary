@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../services/graph_service.dart';
 import 'models/monthly_graph.dart';
@@ -12,12 +13,12 @@ class BarGraphWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (emotionState.isEmpty) {
       return SizedBox(
-        height: 200,
+        height: 200.h,
         child: Center(
           child: Text(
             "감정을 기다리고 있어요!",
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: 16.sp,
               fontFamily: 'GyeonggiBatang',
               color: Colors.black,
             ),
@@ -27,7 +28,6 @@ class BarGraphWidget extends StatelessWidget {
     }
 
     return SfCartesianChart(
-      // 원래 그래프 코드 그대로
       plotAreaBorderWidth: 0,
       primaryXAxis: CategoryAxis(
         axisLabelFormatter: (args) {
@@ -41,10 +41,10 @@ class BarGraphWidget extends StatelessWidget {
           };
           return ChartAxisLabel(
             koreanLabels[args.text] ?? args.text,
-            const TextStyle(
-              fontSize: 12,
+            TextStyle(
+              fontSize: 12.sp,
               fontFamily: 'GyeonggiBatang',
-              color: Color(0xFF827C7C),
+              color: const Color(0xFF827C7C),
             ),
           );
         },
@@ -98,29 +98,29 @@ class BarGraphWidget extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
-                    width: 24,
-                    height: 24,
+                    width: 24.w,
+                    height: 24.h,
                     child: Image.network(
                       imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.sentiment_neutral, size: 16),
+                          Icon(Icons.sentiment_neutral, size: 16.sp),
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3.h),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 1,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 1.h,
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF1D9),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Text(
                       e.emotionCnt.toString(),
-                      style: const TextStyle(
-                        fontSize: 10,
+                      style: TextStyle(
+                        fontSize: 10.sp,
                         fontFamily: 'Pretendard',
                       ),
                     ),

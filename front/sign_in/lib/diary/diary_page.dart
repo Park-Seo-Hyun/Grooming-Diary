@@ -1,15 +1,15 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/diary_service.dart';
 import 'diary_entry_detail.dart';
 import 'diary_detail_page.dart';
 
 class DiaryPage extends StatefulWidget {
   final DateTime selectedDate;
-  final DiaryEntryDetail? initialEntry; // ✅ DiaryEntryDetail 타입
+  final DiaryEntryDetail? initialEntry;
 
   const DiaryPage({super.key, required this.selectedDate, this.initialEntry});
 
@@ -29,7 +29,7 @@ class _DiaryPageState extends State<DiaryPage> {
     _controller = TextEditingController(text: widget.initialEntry?.text ?? '');
     _selectedImage = widget.initialEntry?.localImageFile;
     _controller.addListener(() {
-      setState(() {}); // 글자가 바뀔 때마다 build 재실행
+      setState(() {});
     });
   }
 
@@ -53,16 +53,16 @@ class _DiaryPageState extends State<DiaryPage> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(15.r),
           ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 50),
+          insetPadding: EdgeInsets.symmetric(horizontal: 50.w),
           child: SizedBox(
-            width: 200,
-            height: 250,
+            width: 200.w,
+            height: 250.h,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
                 const Text(
                   "일기를 분석하고 있습니다.",
                   style: TextStyle(
@@ -72,10 +72,9 @@ class _DiaryPageState extends State<DiaryPage> {
                     color: Color(0xFF297BFB),
                   ),
                 ),
-                const SizedBox(height: 20),
-                SizedBox(height: 60, child: Image.asset('assets/cloud.png')),
-
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
+                SizedBox(height: 60.h, child: Image.asset('assets/cloud.png')),
+                SizedBox(height: 20.h),
                 const Text(
                   "로딩중. .",
                   style: TextStyle(
@@ -85,25 +84,25 @@ class _DiaryPageState extends State<DiaryPage> {
                     color: Color(0xFF5A9AFF),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
                 StatefulBuilder(
                   builder: (context, setState) {
                     if (timer == null) {
-                      const totalMs = 7000; // 5초
-                      const tickMs = 20; // 20ms마다 갱신
-                      final totalTicks = totalMs / tickMs; // 총 갱신 횟수
-                      final step = 1 / totalTicks * 5.0; // 매번 증가량
+                      const totalMs = 7000;
+                      const tickMs = 20;
+                      final totalTicks = totalMs / tickMs;
+                      final step = 1 / totalTicks * 5.0;
 
                       timer = Timer.periodic(
                         const Duration(milliseconds: tickMs),
                         (t) {
                           if (progress >= 1) {
                             t.cancel();
-                            Navigator.pop(context); // 팝업 닫기
+                            Navigator.pop(context);
                           } else {
                             setState(() {
                               progress += step;
-                              if (progress > 1) progress = 1; // 마지막은 정확히 1
+                              if (progress > 1) progress = 1;
                             });
                           }
                         },
@@ -111,10 +110,10 @@ class _DiaryPageState extends State<DiaryPage> {
                     }
 
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      padding: EdgeInsets.symmetric(horizontal: 30.w),
                       child: LinearProgressIndicator(
                         value: progress,
-                        minHeight: 10,
+                        minHeight: 10.h,
                         backgroundColor: const Color(0xFFE9F0FB),
                         color: const Color(0xFF5A9AFF),
                       ),
@@ -127,62 +126,66 @@ class _DiaryPageState extends State<DiaryPage> {
         );
       },
     ).then((_) {
-      timer?.cancel(); // 팝업 종료 시 Timer 안전하게 취소
+      timer?.cancel();
     });
   }
 
   Future<void> _saveDiary() async {
+    print('날짜: ${widget.selectedDate}');
+    print('내용: ${_controller.text}');
+    print('선택 이미지: $_selectedImage');
     try {
       final diaryService = DiaryService();
       final fields = {
         'diary_date': widget.selectedDate.toIso8601String(),
         'content': _controller.text,
       };
+      print("📌 저장 시도: 날짜=${fields['diary_date']}, 내용=${fields['content']}");
+      if (_selectedImage != null) print("📌 이미지 포함: ${_selectedImage!.path}");
 
       Map<String, dynamic> result;
 
       if (widget.initialEntry != null) {
-        // 수정
+        print("🔹 기존 일기 수정 시도: id=${widget.initialEntry!.id}");
         result = await diaryService.updateDiary(
           widget.initialEntry!.id,
           fields,
           _selectedImage,
         );
       } else {
-        // 새 작성
+        print("🔹 새 일기 생성 시도");
         result = await diaryService.createDiary(fields, _selectedImage);
       }
+      print("📌 서버 응답 결과: $result");
 
       if (result.isEmpty) throw Exception('서버에서 일기 데이터를 받지 못했습니다.');
 
       final updatedEntry = DiaryEntryDetail.fromJson(result);
-
-      // 로컬 이미지가 있으면 저장
-      if (_selectedImage != null) {
-        updatedEntry.localImageFile = _selectedImage;
-      }
+      if (_selectedImage != null) updatedEntry.localImageFile = _selectedImage;
 
       if (!mounted) return;
 
-      // 🔹 수정인지 새 작성인지 분기
       if (widget.initialEntry != null) {
-        // 수정: 이전 화면으로 반환
         Navigator.pop(context, updatedEntry);
+        print("✅ 수정 완료 후 이전 화면으로 반환");
       } else {
-        // 새 작성: 바로 디테일 페이지로 이동
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => DiaryDetailPage(
               diaryId: updatedEntry.id,
-              onDelete: () => Navigator.pop(context), // 삭제 후 뒤로가기
-              onUpdate: (entry) {}, // 수정 콜백 필요 시
+              onDelete: () => Navigator.pop(context),
+              onUpdate: (entry) {},
             ),
           ),
         );
+        print("✅ 새 일기 저장 완료 후 디테일 페이지 이동");
       }
     } catch (e) {
       print("❌ 일기 저장 실패: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("일기 저장 중 오류 발생: $e")));
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("일기 저장 중 오류 발생")));
@@ -193,8 +196,8 @@ class _DiaryPageState extends State<DiaryPage> {
     if (_selectedImage != null) {
       return Image.file(
         _selectedImage!,
-        height: 60,
-        width: 60,
+        height: 60.h,
+        width: 60.w,
         fit: BoxFit.cover,
       );
     }
@@ -205,31 +208,34 @@ class _DiaryPageState extends State<DiaryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         centerTitle: true,
         backgroundColor: Colors.white,
-        title: SizedBox(height: 60, child: Image.asset('assets/cloud.png')),
+
+        title: SizedBox(height: 60.h, child: Image.asset('assets/cloud.png')),
         bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(7.0),
-          child: Divider(color: Color(0xFFEEEEEE), thickness: 7),
+          preferredSize: Size.fromHeight(5.0),
+          child: Divider(color: Color(0xFFEEEEEE), thickness: 5),
         ),
+        elevation: 0.0,
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(30.0),
+          padding: EdgeInsets.all(30.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 "${widget.selectedDate.year}.${widget.selectedDate.month.toString().padLeft(2, '0')}.${widget.selectedDate.day.toString().padLeft(2, '0')}",
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'GyeonggiTitle',
-                  fontSize: 25,
+                  fontSize: 25.sp,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A6DFF),
+                  color: const Color(0xFF1A6DFF),
                 ),
               ),
-              const SizedBox(height: 35),
+              SizedBox(height: 20.h),
               const Text(
                 "오늘 하루는 어땠나요?",
                 textAlign: TextAlign.center,
@@ -240,17 +246,17 @@ class _DiaryPageState extends State<DiaryPage> {
                   color: Color(0xFF1A6DFF),
                 ),
               ),
-              const SizedBox(height: 50),
+              SizedBox(height: 30.h),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE9F0FB),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10.r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.grey.withOpacity(0.4),
-                      spreadRadius: 2,
-                      blurRadius: 8,
+                      spreadRadius: 2.r,
+                      blurRadius: 8.r,
                       offset: const Offset(0, 4),
                     ),
                   ],
@@ -259,41 +265,41 @@ class _DiaryPageState extends State<DiaryPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 120),
+                      constraints: BoxConstraints(minHeight: 120.h),
                       child: TextField(
                         controller: _controller,
                         keyboardType: TextInputType.multiline,
                         maxLines: null,
                         maxLength: maxLength,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'GyeonggiTitle',
-                          fontSize: 18,
-                          color: Color(0xFF626262),
+                          fontSize: 18.sp,
+                          color: const Color(0xFF626262),
                         ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: "오늘의 이야기를 작성해주세요",
                           hintStyle: TextStyle(
                             fontFamily: 'GyeonggiTitle',
-                            fontSize: 15,
-                            color: Color(0xFF999999),
+                            fontSize: 15.sp,
+                            color: const Color(0xFF999999),
                           ),
                           border: InputBorder.none,
                           counterText: "",
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     if (_selectedImage != null)
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                             child: _buildImageWidget(),
                           ),
                           Positioned(
-                            top: -8,
-                            right: -8,
+                            top: -8.h,
+                            right: -8.w,
                             child: GestureDetector(
                               onTap: () => setState(() {
                                 _selectedImage = null;
@@ -311,8 +317,8 @@ class _DiaryPageState extends State<DiaryPage> {
                           ),
                         ],
                       ),
-                    Container(
-                      height: 30, // Row 전체 높이
+                    SizedBox(
+                      height: 30.h,
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -332,19 +338,19 @@ class _DiaryPageState extends State<DiaryPage> {
                           ),
                           const Spacer(),
                           SizedBox(
-                            width: 100, // Stack의 너비 지정
-                            height: 30, // Stack의 높이 지정
+                            width: 100.w,
+                            height: 30.h,
                             child: Stack(
                               children: [
                                 Positioned(
-                                  top: 10, // 위쪽 위치 조정
-                                  right: 10, // 왼쪽 위치 조정
+                                  top: 10.h,
+                                  right: 10.w,
                                   child: Text(
                                     "${_controller.text.length}/$maxLength",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: 'Pretendard',
-                                      fontSize: 14,
-                                      color: Color(0xFFA7A7A7),
+                                      fontSize: 14.sp,
+                                      color: const Color(0xFFA7A7A7),
                                     ),
                                   ),
                                 ),
@@ -357,52 +363,46 @@ class _DiaryPageState extends State<DiaryPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: 30.h),
               Row(
                 children: [
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 20), // ← 바깥여백 추가
+                      padding: EdgeInsets.only(left: 20.w),
                       child: ElevatedButton(
-                        child: const Text("취소", style: TextStyle(fontSize: 18)),
+                        child: Text("취소", style: TextStyle(fontSize: 18.sp)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF5A9AFF),
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: EdgeInsets.symmetric(vertical: 10.h),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.r),
                           ),
-                          elevation: 6, // ← 그림자 높이 조절 (0~24 정도)
-                          shadowColor: Colors.black.withOpacity(
-                            0.5,
-                          ), // ← 그림자 색상/투명도
+                          elevation: 6,
+                          shadowColor: Colors.black.withOpacity(0.5),
                         ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 35),
+                  SizedBox(width: 35.w),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(right: 20), // ← 바깥여백 추가
+                      padding: EdgeInsets.only(right: 20.w),
                       child: ElevatedButton(
-                        child: const Text("저장", style: TextStyle(fontSize: 18)),
+                        child: Text("저장", style: TextStyle(fontSize: 18.sp)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF5A9AFF),
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: EdgeInsets.symmetric(vertical: 10.h),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.r),
                           ),
-                          elevation: 6, // ← 그림자 높이 조절 (0~24 정도)
+                          elevation: 6,
                           shadowColor: Colors.black.withOpacity(0.5),
                         ),
                         onPressed: () async {
-                          // 1. 저장 여부 팝업 띄우기
-                          // 1. 분석 팝업 띄우고 3초 동안 진행
                           await _showAnalyzingDialog();
-
-                          // 2. 팝업 종료 후 바로 저장
                           _saveDiary();
                         },
                       ),

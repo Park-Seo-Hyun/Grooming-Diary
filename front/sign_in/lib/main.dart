@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sign_in/welcome_screen.dart';
 import 'diary/diary_entry.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // ⬅️ 추가됨
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// ⬇️ ScreenUtil 추가
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 // Provider 선언
 class DiaryProvider extends ChangeNotifier {
@@ -40,15 +43,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Grooming App',
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A6DFF)),
-        useMaterial3: true,
-      ),
-      debugShowCheckedModeBanner: false,
-      home: const LoadingScreen(),
+    // ⬇️ ScreenUtilInit 추가 (앱 전체에서 ScreenUtil 사용 가능)
+    return ScreenUtilInit(
+      designSize: const Size(360, 690), // ⬅️ 실제 디자인 기준 해상도
+      minTextAdapt: true,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'Grooming App',
+          theme: ThemeData(
+            scaffoldBackgroundColor: Colors.white,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF1A6DFF),
+            ),
+            useMaterial3: true,
+          ),
+          debugShowCheckedModeBanner: false,
+          home: child, // ⬅️ 초기 화면으로 LoadingScreen
+        );
+      },
+      child: const LoadingScreen(),
     );
   }
 }
@@ -86,16 +99,19 @@ class _LoadingScreenState extends State<LoadingScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 270),
+            SizedBox(height: 270.h), // ⬅️ ScreenUtil 적용 (높이)
             Image.asset(
               'assets/grooming_main.png',
-              height: 230,
+              height: 170.h, // ⬅️ ScreenUtil 적용 (높이)
               fit: BoxFit.contain,
               alignment: Alignment.bottomCenter,
               errorBuilder: (context, error, stackTrace) {
-                return const Text(
+                return Text(
                   'Cloud Image Placeholder',
-                  style: TextStyle(fontSize: 24, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    color: Colors.grey,
+                  ), // ⬅️ ScreenUtil 적용 (폰트)
                 );
               },
             ),

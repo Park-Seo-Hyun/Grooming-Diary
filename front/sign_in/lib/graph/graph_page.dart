@@ -4,6 +4,7 @@ import 'models/monthly_graph.dart';
 import 'bar_graph.dart';
 import 'doughnut_graph.dart';
 import 'line_graph.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class GraphPage extends StatefulWidget {
   final String initialYearMonth;
@@ -92,7 +93,7 @@ class _GraphPageState extends State<GraphPage> {
     "angry": "(화남, 짜증, 분개)",
     "fear": "(걱정, 근심, 두려움)",
     "tender": "(평온, 안정, 편안)",
-    "neutral": "(even)",
+    "neutral": "(무심, 안정)",
   };
 
   final Map<String, String> charName = {
@@ -104,7 +105,6 @@ class _GraphPageState extends State<GraphPage> {
     "neutral": "평푱이",
   };
 
-  /// 👉 여기! 너가 직접 적어서 보여줄 텍스트
   final Map<String, String> customComment = {
     "happy":
         "행복을 담당하는 감정 캐릭터로\n 따뜻한 햇빛처럼 마음을 밝히는 행복의 수호자입니다. 햇살이는 여러분의 긍정적인 감정을 찾아 반짝이며 기쁨의 메시지를 전해줍니다. \"오늘도 너의 마음에 따뜻한 햇살이 비치길 바라!\"",
@@ -127,22 +127,20 @@ class _GraphPageState extends State<GraphPage> {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
-
           title: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ⭐ 가운데 제목 + 오른쪽 X 버튼
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  const Align(
+                  Align(
                     alignment: Alignment.center,
                     child: Text(
                       "감정 소개",
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 18.sp,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'GyeonggiBatang',
                         color: Color(0xFF585858),
@@ -153,24 +151,21 @@ class _GraphPageState extends State<GraphPage> {
                     right: 0,
                     child: GestureDetector(
                       onTap: () => Navigator.of(context).pop(),
-                      child: const Icon(Icons.close),
+                      child: Icon(Icons.close, size: 24.sp),
                     ),
                   ),
                 ],
               ),
-
-              // ⭐ 아래에 얇은 구분선
-              const Padding(
-                padding: EdgeInsets.only(top: 8.0),
+              Padding(
+                padding: EdgeInsets.only(top: 8.h),
                 child: Divider(
-                  thickness: 1,
-                  height: 1,
+                  thickness: 1.h,
+                  height: 1.h,
                   color: Color(0xFFDDDDDD),
                 ),
               ),
             ],
           ),
-
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
@@ -178,11 +173,8 @@ class _GraphPageState extends State<GraphPage> {
               itemCount: graphData!.emotionState.length,
               itemBuilder: (context, index) {
                 final emotion = graphData!.emotionState[index];
-
-                // 🔥 핵심: label 키 정리
                 final rawLabel = emotion.emotionLabel;
                 final label = emotion.emotionLabel.trim().toLowerCase();
-
                 final imageUrl = GraphService.baseUrl + emotion.emotionEmoji;
 
                 return Column(
@@ -193,39 +185,34 @@ class _GraphPageState extends State<GraphPage> {
                       children: [
                         Image.network(
                           imageUrl,
-                          width: 70,
-                          height: 70,
+                          width: 70.w,
+                          height: 70.h,
                           fit: BoxFit.contain,
                         ),
-                        const SizedBox(width: 12),
-
-                        // ⭐ 여기 padding으로 텍스트를 조금 아래로 내림
+                        SizedBox(width: 12.w),
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                              top: 8,
-                            ), // ← 숫자 조절하면 높이 조절 가능!
+                            padding: EdgeInsets.only(top: 8.h),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // 👉 이름
                                 RichText(
                                   text: TextSpan(
                                     children: [
-                                      const TextSpan(
+                                      TextSpan(
                                         text: "이름 : ",
                                         style: TextStyle(
                                           fontFamily: 'Pretendard',
-                                          fontSize: 15,
+                                          fontSize: 15.sp,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.black,
                                         ),
                                       ),
                                       TextSpan(
                                         text: charName[label] ?? label,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontFamily: 'Pretendard',
-                                          fontSize: 15,
+                                          fontSize: 15.sp,
                                           fontWeight: FontWeight.normal,
                                           color: Colors.black,
                                         ),
@@ -233,18 +220,14 @@ class _GraphPageState extends State<GraphPage> {
                                     ],
                                   ),
                                 ),
-
-                                const SizedBox(height: 4),
-
-                                // 👉 역할
+                                SizedBox(height: 4.h),
                                 RichText(
                                   text: TextSpan(
                                     children: [
-                                      const TextSpan(
+                                      TextSpan(
                                         text: " 역할 : ",
-
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 12.sp,
                                           fontFamily: 'Pretendard',
                                           fontWeight: FontWeight.bold,
                                           color: Colors.black,
@@ -253,8 +236,8 @@ class _GraphPageState extends State<GraphPage> {
                                       TextSpan(
                                         text:
                                             "${roleName[label] ?? ""} ${roleDesc[label] ?? ""}",
-                                        style: const TextStyle(
-                                          fontSize: 12,
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
                                           fontFamily: 'Pretendard',
                                           fontWeight: FontWeight.normal,
                                           color: Colors.black,
@@ -269,22 +252,17 @@ class _GraphPageState extends State<GraphPage> {
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 12),
-
-                    // 긴 설명 텍스트 — 사진 밑에 나오기!
+                    SizedBox(height: 12.h),
                     Text(
                       customComment[label] ?? "",
-                      style: const TextStyle(
-                        fontSize: 10,
+                      style: TextStyle(
+                        fontSize: 10.sp,
                         color: Color(0xFF555555),
                         fontFamily: 'Pretendard',
                       ),
                     ),
-
-                    const SizedBox(height: 16),
-                    // 🔥 Divider를 Dialog padding 밖까지 확장
-                    const Divider(),
+                    SizedBox(height: 16.h),
+                    Divider(thickness: 1.h),
                   ],
                 );
               },
@@ -300,9 +278,9 @@ class _GraphPageState extends State<GraphPage> {
     return Scaffold(
       body: SafeArea(
         child: isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 25),
+                padding: EdgeInsets.symmetric(vertical: 25.h),
                 child: Column(
                   children: [
                     Stack(
@@ -312,31 +290,30 @@ class _GraphPageState extends State<GraphPage> {
                             "감정 그래프",
                             style: TextStyle(
                               fontFamily: 'GyeonggiBatang',
-                              fontSize: 32,
+                              fontSize: 32.sp,
                               color: Color(0xFF1A6DFF),
                             ),
                           ),
                         ),
                         Positioned(
-                          right: 20, // 오른쪽에서 20px
-                          top: 0, // 위에서 0px
+                          right: 20.w,
+                          top: 0,
                           child: IconButton(
-                            icon: Icon(Icons.menu, size: 30),
+                            icon: Icon(Icons.menu, size: 30.sp),
                             onPressed: showEmotionPopup,
                           ),
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_left, size: 30),
+                          icon: Icon(Icons.arrow_left, size: 30.sp),
                           onPressed: () => changeMonth(-1),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Builder(
                           builder: (context) {
                             final parts = currentMonth.split('-');
@@ -346,37 +323,32 @@ class _GraphPageState extends State<GraphPage> {
 
                             return Text(
                               displayText,
-                              style: const TextStyle(
-                                fontSize: 20,
-
+                              style: TextStyle(
+                                fontSize: 20.sp,
                                 fontFamily: 'GyeonggiBatang',
                                 color: Color(0xFF626262),
                               ),
                             );
                           },
                         ),
-
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         IconButton(
-                          icon: const Icon(Icons.arrow_right, size: 30),
+                          icon: Icon(Icons.arrow_right, size: 30.sp),
                           onPressed: () => changeMonth(1),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                       ],
                     ),
-                    const SizedBox(height: 16),
-
-                    // 🔴 미래 달이면 안내 텍스트 표시
+                    SizedBox(height: 16.h),
                     if (isFutureMonth)
                       Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.all(16),
-
-                        child: const Center(
+                        margin: EdgeInsets.symmetric(horizontal: 20.w),
+                        padding: EdgeInsets.all(16.h),
+                        child: Center(
                           child: Text(
                             "구르밍은 아직 감정을 기다리고있어요!",
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 16.sp,
                               color: Color(0xFF1A6DFF),
                               fontFamily: 'GyeonggiBatang',
                             ),
@@ -384,25 +356,24 @@ class _GraphPageState extends State<GraphPage> {
                         ),
                       )
                     else if (graphData == null)
-                      const Center(child: Text("데이터 로드 실패"))
+                      Center(child: Text("데이터 로드 실패"))
                     else
                       Column(
                         children: [
-                          // 월 총 일기 횟수
                           Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 8,
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 8.h,
                             ),
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(16.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF7FAFF),
-                              borderRadius: BorderRadius.circular(12),
+                              color: Color(0xFFF7FAFF),
+                              borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
+                                  blurRadius: 5.r,
+                                  offset: Offset(0, 2.h),
                                 ),
                               ],
                             ),
@@ -410,30 +381,30 @@ class _GraphPageState extends State<GraphPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   "이번 달 일기 총 기록",
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 18.sp,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF585858),
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                SizedBox(height: 4.h),
                                 Center(
                                   child: Text(
                                     "${graphData!.diaryCnt}회",
-                                    style: const TextStyle(
-                                      fontSize: 30,
+                                    style: TextStyle(
+                                      fontSize: 30.sp,
                                       fontFamily: 'GyeonggiTitle',
                                       color: Color(0xFF1A6DFF),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
+                                SizedBox(height: 8.h),
+                                Text(
                                   "이번 달에는 어떤 감정이 많았을까요? 행복한 날이 많아지기를 바랍니다!",
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                     color: Color(0xFF585858),
                                   ),
                                 ),
@@ -443,19 +414,19 @@ class _GraphPageState extends State<GraphPage> {
 
                           // 막대그래프
                           Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 8,
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 8.h,
                             ),
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(16.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF7FAFF),
-                              borderRadius: BorderRadius.circular(12),
+                              color: Color(0xFFF7FAFF),
+                              borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
+                                  blurRadius: 5.r,
+                                  offset: Offset(0, 2.h),
                                 ),
                               ],
                             ),
@@ -463,25 +434,25 @@ class _GraphPageState extends State<GraphPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   "내 감정 순위",
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 18.sp,
                                     fontFamily: 'Pretendard',
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF585858),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
+                                SizedBox(height: 8.h),
+                                Text(
                                   "이번 달에는 어떤 감정이 많았을까요? 행복한 날이 많아지기를 바랍니다!",
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                     fontFamily: 'Pretendard',
                                     color: Color(0xFF585858),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8.h),
                                 BarGraphWidget(
                                   emotionState: graphData!.emotionState,
                                 ),
@@ -489,21 +460,21 @@ class _GraphPageState extends State<GraphPage> {
                             ),
                           ),
 
-                          // 도넛형 원형그래프
+                          // 도넛형 그래프
                           Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 8,
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 8.h,
                             ),
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(16.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF7FAFF),
-                              borderRadius: BorderRadius.circular(12),
+                              color: Color(0xFFF7FAFF),
+                              borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
+                                  blurRadius: 5.r,
+                                  offset: Offset(0, 2.h),
                                 ),
                               ],
                             ),
@@ -511,25 +482,25 @@ class _GraphPageState extends State<GraphPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   "내 감정 비율",
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 18.sp,
                                     fontFamily: 'Pretendard',
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF585858),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
+                                SizedBox(height: 8.h),
+                                Text(
                                   "이번 달 나의 감정 비율을 알아봐요. 부디 행복으로 가득차기를!",
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                     fontFamily: 'Pretendard',
                                     color: Color(0xFF585858),
                                   ),
                                 ),
-                                const SizedBox(height: 16),
+                                SizedBox(height: 16.h),
                                 DoughnutGraphWidgetFL(
                                   emotionState: graphData!.emotionState,
                                 ),
@@ -537,21 +508,21 @@ class _GraphPageState extends State<GraphPage> {
                             ),
                           ),
 
-                          // 꺾은선그래프
+                          // 꺾은선 그래프
                           Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 8,
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 8.h,
                             ),
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(16.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF7FAFF),
-                              borderRadius: BorderRadius.circular(12),
+                              color: Color(0xFFF7FAFF),
+                              borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
+                                  blurRadius: 5.r,
+                                  offset: Offset(0, 2.h),
                                 ),
                               ],
                             ),
@@ -559,33 +530,33 @@ class _GraphPageState extends State<GraphPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   "내 감정 추이",
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 18.sp,
                                     fontFamily: 'Pretendard',
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF585858),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
+                                SizedBox(height: 8.h),
+                                Text(
                                   "이번 달 나의 감정의 변화를 한 눈에 확인해보세요. 일기를 통해 쌓인 감정의 흐름을 살펴보며 나를 좀 더 이해하는 시간을 가져보아요!",
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                     fontFamily: 'Pretendard',
                                     color: Color(0xFF585858),
                                   ),
                                 ),
-                                const SizedBox(height: 10),
+                                SizedBox(height: 10.h),
                                 MultiEmotionLineGraph(
                                   dailyEmotionScores:
                                       graphData!.dailyEmotionScores,
                                 ),
-                                const Text(
+                                Text(
                                   "AI 자연어 처리 기술을 활용하여 일기 텍스트에 나타난 표현을 분석한 결과일 뿐이며, 정신건강의학과 전문 평가나 심리검사, 일상 진단 기준 등을 기반으로 산출된 값이 아닙니다.",
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 10.sp,
                                     fontFamily: 'Pretendard',
                                     color: Color(0xFFFF0000),
                                   ),
@@ -593,8 +564,7 @@ class _GraphPageState extends State<GraphPage> {
                               ],
                             ),
                           ),
-
-                          const SizedBox(height: 50),
+                          SizedBox(height: 50.h),
                         ],
                       ),
                   ],

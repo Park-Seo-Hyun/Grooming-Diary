@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'models/monthly_graph.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MultiEmotionLineGraph extends StatefulWidget {
   final List<DailyEmotionScore> dailyEmotionScores;
@@ -51,8 +52,8 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
         .toList();
 
     if (filteredScores.isEmpty) {
-      return const SizedBox(
-        height: 300,
+      return SizedBox(
+        height: 300.h,
         child: Center(child: Text("그래프 데이터가 없습니다.")),
       );
     }
@@ -64,7 +65,7 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
     );
 
     return SizedBox(
-      height: 300,
+      height: 300.h,
       width: double.infinity,
       child: PageView.builder(
         controller: _pageController,
@@ -92,30 +93,30 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
     List<int> monthDays,
   ) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
+      margin: EdgeInsets.symmetric(horizontal: 0.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+            blurRadius: 5.r,
+            offset: Offset(0.w, 2.h),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text(
+          Text(
             "전체",
             style: TextStyle(
               color: Color(0xFF929292),
               fontFamily: 'GyeonggiTitle',
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4.h),
           Expanded(
             child: LineChart(
               LineChartData(
@@ -130,12 +131,12 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                   drawVerticalLine: true,
                   getDrawingHorizontalLine: (value) => FlLine(
                     color: Colors.grey.withOpacity(0.3),
-                    strokeWidth: 0.5,
+                    strokeWidth: 0.5.w,
                     dashArray: [4, 4],
                   ),
                   getDrawingVerticalLine: (value) => FlLine(
                     color: Colors.grey.withOpacity(0.3),
-                    strokeWidth: 0.5,
+                    strokeWidth: 0.5.w,
                     dashArray: [4, 4],
                   ),
                 ),
@@ -146,7 +147,7 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                       interval: 0.25,
                       getTitlesWidget: (value, meta) => Text(
                         value.toStringAsFixed(2),
-                        style: const TextStyle(fontSize: 10),
+                        style: TextStyle(fontSize: 10.sp),
                       ),
                     ),
                   ),
@@ -157,11 +158,11 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                       getTitlesWidget: (value, meta) {
                         int idx = value.toInt();
                         if (idx < 0 || idx >= monthDays.length) {
-                          return const SizedBox.shrink();
+                          return SizedBox.shrink();
                         }
                         return Text(
                           monthDays[idx].toString(),
-                          style: const TextStyle(fontSize: 10),
+                          style: TextStyle(fontSize: 10.sp),
                         );
                       },
                     ),
@@ -175,9 +176,9 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                 ),
                 borderData: FlBorderData(
                   show: true,
-                  border: const Border(
-                    bottom: BorderSide(color: Colors.grey, width: 1),
-                    left: BorderSide(color: Colors.grey, width: 1),
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey, width: 1.w),
+                    left: BorderSide(color: Colors.grey, width: 1.w),
                     right: BorderSide(color: Colors.transparent),
                     top: BorderSide(color: Colors.transparent),
                   ),
@@ -198,7 +199,7 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                     spots: emotionSpots,
                     isCurved: true,
                     color: colors[emotion]!,
-                    barWidth: 2,
+                    barWidth: 2.w,
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(show: false),
                     preventCurveOverShooting: true,
@@ -227,15 +228,15 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
     };
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
+      margin: EdgeInsets.symmetric(horizontal: 0.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+            blurRadius: 5.r,
+            offset: Offset(0.w, 2.h),
           ),
         ],
       ),
@@ -244,13 +245,13 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
         children: [
           Text(
             emotionKorean[emotion] ?? emotion,
-            style: const TextStyle(
+            style: TextStyle(
               color: Color(0xFF929292),
               fontFamily: 'GyeonggiTitle',
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4.h),
           Expanded(
             child: LineChart(
               LineChartData(
@@ -265,12 +266,12 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                   drawVerticalLine: true,
                   getDrawingHorizontalLine: (value) => FlLine(
                     color: Colors.grey.withOpacity(0.5),
-                    strokeWidth: 0.7,
+                    strokeWidth: 0.7.w,
                     dashArray: [4, 4],
                   ),
                   getDrawingVerticalLine: (value) => FlLine(
                     color: Colors.grey.withOpacity(0.5),
-                    strokeWidth: 0.7,
+                    strokeWidth: 0.7.w,
                     dashArray: [4, 4],
                   ),
                 ),
@@ -281,7 +282,7 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                       interval: 0.25,
                       getTitlesWidget: (value, meta) => Text(
                         value.toStringAsFixed(2),
-                        style: const TextStyle(fontSize: 10),
+                        style: TextStyle(fontSize: 10.sp),
                       ),
                     ),
                   ),
@@ -292,10 +293,10 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                       getTitlesWidget: (value, meta) {
                         int idx = value.toInt();
                         if (idx < 0 || idx >= monthDays.length)
-                          return const SizedBox.shrink();
+                          return SizedBox.shrink();
                         return Text(
                           monthDays[idx].toString(),
-                          style: const TextStyle(fontSize: 10),
+                          style: TextStyle(fontSize: 10.sp),
                         );
                       },
                     ),
@@ -309,9 +310,9 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                 ),
                 borderData: FlBorderData(
                   show: true,
-                  border: const Border(
-                    bottom: BorderSide(color: Colors.grey, width: 1),
-                    left: BorderSide(color: Colors.grey, width: 1),
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey, width: 1.w),
+                    left: BorderSide(color: Colors.grey, width: 1.w),
                     right: BorderSide(color: Colors.transparent),
                     top: BorderSide(color: Colors.transparent),
                   ),
@@ -330,7 +331,7 @@ class _MultiEmotionLineGraphState extends State<MultiEmotionLineGraph> {
                     isCurved: true,
                     curveSmoothness: 0.7,
                     color: color,
-                    barWidth: 2,
+                    barWidth: 2.w,
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(show: false),
                     preventCurveOverShooting: true,

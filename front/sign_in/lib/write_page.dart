@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sign_in/chat_page.dart';
 import 'services/auth_service.dart';
 
@@ -98,12 +99,12 @@ class _WritePageState extends State<WritePage> {
   }
 
   Widget buildQuestionLine(int number, String text, double maxWidth) {
-    TextSpan hashSpan = const TextSpan(
+    TextSpan hashSpan = TextSpan(
       text: "   #",
       style: TextStyle(
         fontFamily: 'GyeonggiTitle',
-        fontSize: 17,
-        color: Color(0xFF1A6DFF),
+        fontSize: 17.sp,
+        color: const Color(0xFF1A6DFF),
         fontWeight: FontWeight.bold,
         fontStyle: FontStyle.italic,
       ),
@@ -111,19 +112,19 @@ class _WritePageState extends State<WritePage> {
 
     TextSpan numberSpan = TextSpan(
       text: " ${number.toString().padLeft(2, '0')}   ",
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'GyeonggiTitle',
-        fontSize: 22,
-        color: Color(0xFF1A6DFF),
+        fontSize: 22.sp,
+        color: const Color(0xFF1A6DFF),
         fontWeight: FontWeight.bold,
         fontStyle: FontStyle.italic,
       ),
     );
 
-    TextStyle textStyle = const TextStyle(
+    TextStyle textStyle = TextStyle(
       fontFamily: 'GyeonggiBatang',
-      fontSize: 15,
-      color: Color(0xFF434343),
+      fontSize: 15.sp,
+      color: const Color(0xFF434343),
     );
 
     final numberPainter = TextPainter(
@@ -166,7 +167,7 @@ class _WritePageState extends State<WritePage> {
           numberSpan,
           WidgetSpan(
             child: Transform.translate(
-              offset: const Offset(0, 2),
+              offset: Offset(0, 2.h),
               child: Text(displayText, style: textStyle),
             ),
           ),
@@ -177,26 +178,26 @@ class _WritePageState extends State<WritePage> {
 
   @override
   Widget build(BuildContext context) {
-    final maxWidth = MediaQuery.of(context).size.width - 55;
+    final maxWidth = MediaQuery.of(context).size.width - 55.w;
 
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 25.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Center(
+                Center(
                   child: Text(
                     "긍정 이야기",
                     style: TextStyle(
                       fontFamily: 'GyeonggiBatang',
-                      fontSize: 32,
-                      color: Color(0xFF1A6DFF),
+                      fontSize: 32.sp,
+                      color: const Color(0xFF1A6DFF),
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
+                SizedBox(height: 40.h),
                 if (todayQuestion != null)
                   GestureDetector(
                     onTap: () => openChat(todayQuestion!, mode: "write"),
@@ -206,10 +207,10 @@ class _WritePageState extends State<WritePage> {
                       maxWidth,
                     ),
                   ),
-                const SizedBox(height: 25),
+                SizedBox(height: 25.h),
                 ...pastAnswers.map(
                   (answer) => Container(
-                    margin: const EdgeInsets.symmetric(vertical: 20),
+                    margin: EdgeInsets.symmetric(vertical: 20.h),
                     child: GestureDetector(
                       onTap: () => openChat(answer, mode: "view"),
                       child: buildQuestionLine(
@@ -221,13 +222,16 @@ class _WritePageState extends State<WritePage> {
                   ),
                 ),
                 if (todayQuestion == null && pastAnswers.isEmpty)
-                  const Center(
+                  Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text('질문이 없습니다.', style: TextStyle(fontSize: 18)),
+                      padding: EdgeInsets.all(16.w),
+                      child: Text(
+                        '질문이 없습니다.',
+                        style: TextStyle(fontSize: 18.sp),
+                      ),
                     ),
                   ),
-                const SizedBox(height: 50),
+                SizedBox(height: 50.h),
               ],
             ),
           );

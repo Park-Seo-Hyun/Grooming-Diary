@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'models/monthly_graph.dart';
 
 class DoughnutGraphWidgetFL extends StatelessWidget {
@@ -11,12 +12,12 @@ class DoughnutGraphWidgetFL extends StatelessWidget {
   Widget build(BuildContext context) {
     if (emotionState.isEmpty) {
       return SizedBox(
-        height: 200,
+        height: 200.h,
         child: Center(
           child: Text(
             "감정을 기다리고 있어요!",
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: 16.sp,
               fontFamily: 'GyeonggiBatang',
               color: Colors.black,
             ),
@@ -31,11 +32,11 @@ class DoughnutGraphWidgetFL extends StatelessWidget {
         Expanded(
           flex: 2,
           child: SizedBox(
-            height: 250,
+            height: 250.h,
             child: PieChart(
               PieChartData(
                 sectionsSpace: 0,
-                centerSpaceRadius: 30, // 도넛 형태
+                centerSpaceRadius: 30.r, // 도넛 형태
                 sections: emotionState.where((e) => e.emotionPercent > 0).map((
                   e,
                 ) {
@@ -66,13 +67,13 @@ class DoughnutGraphWidgetFL extends StatelessWidget {
                   return PieChartSectionData(
                     value: e.emotionPercent.toDouble(),
                     color: color,
-                    radius: 60,
+                    radius: 60.r,
                     title: e.emotionPercent == 0 ? '' : "${e.emotionPercent}%",
                     titleStyle: TextStyle(
-                      fontSize: 15,
+                      fontSize: 15.sp,
                       fontFamily: 'Pretendard',
                       fontWeight: FontWeight.bold,
-                      color: isSmall ? Colors.black : Colors.white,
+                      color: isSmall ? Colors.white : Colors.white,
                     ),
                     titlePositionPercentageOffset: 0.6,
                   );
@@ -84,7 +85,7 @@ class DoughnutGraphWidgetFL extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(width: 16),
+        SizedBox(width: 16.w),
 
         // 2️⃣ 감정 설명 박스
         Expanded(
@@ -126,24 +127,24 @@ class DoughnutGraphWidgetFL extends StatelessWidget {
               }[e.emotionLabel]!;
 
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: EdgeInsets.symmetric(vertical: 4.h),
                 child: Row(
                   children: [
                     Container(
-                      width: 16,
-                      height: 16,
+                      width: 16.w,
+                      height: 16.h,
                       decoration: BoxDecoration(
                         color: color,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(4.r),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8.w),
                     Text(
                       labelKorean,
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: 14.sp,
                         fontFamily: 'Pretendard',
-                        color: Color(0xFF585858),
+                        color: const Color(0xFF585858),
                       ),
                     ),
                   ],

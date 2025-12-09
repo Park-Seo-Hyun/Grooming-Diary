@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'diary/diary_entry.dart';
 import 'diary/diary_page.dart';
 import 'diary/diary_detail_page.dart';
@@ -181,7 +182,7 @@ class _HomePageState extends State<HomePage> {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: SizedBox(
-            height: 60,
+            height: 60.h,
             child: Image.asset(
               'assets/cloud.png',
               color: Color(0xFFF44FBD),
@@ -195,29 +196,28 @@ class _HomePageState extends State<HomePage> {
             '혹시 계속 힘든 감정이 이어진다면,\n전문가와 잠시 이야기 나누는 것도 도움이 될 수 있어요.\n\n'
             '누군가에게 기대는 건 약함이 아니라, 지친 마음을 돌보는 아주 자연스러운 선택이에요.\n\n'
             '당신의 마음이 조금이라도 더 편해지길 바랄게요.',
-            style: const TextStyle(
+            style: TextStyle(
               color: Color(0xFFF44FBD),
               fontFamily: 'GyeonggiTitle',
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
           actionsPadding: EdgeInsets.zero,
           actions: [
             Row(
               children: [
-                // 왼쪽 버튼: 취소
                 Expanded(
                   child: InkWell(
                     onTap: () {
-                      Navigator.of(context).pop(); // 팝업 닫기
+                      Navigator.of(context).pop();
                     },
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(15),
                     ),
                     child: Container(
-                      height: 56,
+                      height: 56.h,
                       decoration: const BoxDecoration(
-                        color: Color(0xFFFFC9F1), // 연한 하늘색
+                        color: Color(0xFFFFC9F1),
                         borderRadius: BorderRadius.only(
                           bottomLeft: Radius.circular(15),
                         ),
@@ -234,21 +234,19 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-
-                // 오른쪽 버튼: 그래프 페이지 이동
                 Expanded(
                   child: InkWell(
                     onTap: () {
-                      Navigator.of(context).pop(); // 팝업 닫기
-                      _onItemTapped(1); // 그래프 페이지로 이동
+                      Navigator.of(context).pop();
+                      _onItemTapped(1);
                     },
                     borderRadius: const BorderRadius.only(
                       bottomRight: Radius.circular(15),
                     ),
                     child: Container(
-                      height: 56,
+                      height: 56.h,
                       decoration: const BoxDecoration(
-                        color: Color(0xFFF79CDF), // 진한 파란색
+                        color: Color(0xFFF79CDF),
                         borderRadius: BorderRadius.only(
                           bottomRight: Radius.circular(15),
                         ),
@@ -297,7 +295,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               content: SizedBox(
-                height: 80,
+                height: 80.h,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -311,8 +309,8 @@ class _HomePageState extends State<HomePage> {
                                   value: year,
                                   child: Text(
                                     "$year년",
-                                    style: const TextStyle(
-                                      fontSize: 18,
+                                    style: TextStyle(
+                                      fontSize: 18.sp,
                                       fontFamily: 'GyeonggiTitle',
                                     ),
                                   ),
@@ -324,7 +322,7 @@ class _HomePageState extends State<HomePage> {
                           setDialogState(() => selectedYear = year);
                       },
                     ),
-                    const SizedBox(width: 30),
+                    SizedBox(width: 30.w),
                     DropdownButton<int>(
                       value: selectedMonth,
                       iconEnabledColor: const Color(0xFF5A9AFF),
@@ -334,8 +332,8 @@ class _HomePageState extends State<HomePage> {
                               value: month,
                               child: Text(
                                 "$month월",
-                                style: const TextStyle(
-                                  fontSize: 18,
+                                style: TextStyle(
+                                  fontSize: 18.sp,
                                   fontFamily: 'GyeonggiTitle',
                                 ),
                               ),
@@ -363,7 +361,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(fontSize: 18, color: Color(0xFF5675DC)),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context, {
                     'year': selectedYear,
@@ -392,22 +390,24 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildEmojiWidget(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      return const Icon(Icons.mood, size: 40, color: Colors.grey);
+      return Icon(Icons.mood, size: 40.sp, color: Colors.grey);
     }
     return Image.network(
       imageUrl,
-      width: 40,
-      height: 40,
+      width: 40.w,
+      height: 40.h,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
         print("Emoji network load error: $error");
-        return const Icon(Icons.mood_bad, size: 40, color: Colors.grey);
+        return Icon(Icons.mood_bad, size: 40.sp, color: Colors.grey);
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    ScreenUtil.init(context, designSize: const Size(390, 844));
+
     const primaryColor = Color(0xFF5A9AFF);
     const lineColor = Color(0xFFCFCFCF);
 
@@ -426,18 +426,18 @@ class _HomePageState extends State<HomePage> {
       SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
             Stack(
               children: [
                 Row(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(left: 10.0),
+                      padding: EdgeInsets.only(left: 10.w),
                       child: IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.calendar_month,
                           color: Color(0xFF5675DC),
-                          size: 35,
+                          size: 35.sp,
                         ),
                         onPressed: _showYearMonthPicker,
                       ),
@@ -445,24 +445,24 @@ class _HomePageState extends State<HomePage> {
                     const Spacer(),
                     Text(
                       DateFormat('yyyy').format(_focusedDay),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'PretendardBold',
-                        fontSize: 25,
+                        fontSize: 25.sp,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF5675DC),
                       ),
                     ),
                     const Spacer(),
-                    const SizedBox(width: 60),
+                    SizedBox(width: 60.w),
                   ],
                 ),
                 Positioned(
-                  right: 20,
-                  top: 50,
+                  right: 20.w,
+                  top: 50.h,
                   child: Text(
                     '구르밍 점수: $userEmotionScore 점',
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 16.sp,
                       fontFamily: 'GyeonggiBatang',
                       color: Color(0xFF3A3939),
                     ),
@@ -474,9 +474,9 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.arrow_left,
-                    size: 40,
+                    size: 40.sp,
                     color: Color(0xFF5675DC),
                   ),
                   onPressed: () => setState(() {
@@ -487,20 +487,20 @@ class _HomePageState extends State<HomePage> {
                     _loadMonthlyDiaries();
                   }),
                 ),
-                const SizedBox(width: 40),
+                SizedBox(width: 40.w),
                 Text(
                   DateFormat('MM').format(_focusedDay),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'PretendardRegular',
-                    fontSize: 33,
+                    fontSize: 33.sp,
                     color: Color(0xFF5675DC),
                   ),
                 ),
-                const SizedBox(width: 40),
+                SizedBox(width: 40.w),
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.arrow_right,
-                    size: 40,
+                    size: 40.sp,
                     color: Color(0xFF5675DC),
                   ),
                   onPressed: () => setState(() {
@@ -515,18 +515,18 @@ class _HomePageState extends State<HomePage> {
             ),
             Text(
               DateFormat('MMMM').format(_focusedDay),
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'PretendardRegular',
-                fontSize: 15,
+                fontSize: 15.sp,
                 color: Color(0xFF5675DC),
               ),
             ),
-            const SizedBox(height: 25),
+            SizedBox(height: 25.h),
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: lineColor, width: 1),
-                  bottom: BorderSide(color: lineColor, width: 1),
+                  top: BorderSide(color: lineColor, width: 1.w),
+                  bottom: BorderSide(color: lineColor, width: 1.w),
                 ),
               ),
               child: Row(
@@ -550,18 +550,18 @@ class _HomePageState extends State<HomePage> {
                               d,
                               style: TextStyle(
                                 fontFamily: 'PretendardBold',
-                                fontSize: 13,
+                                fontSize: 13.sp,
                                 color: d == 'Sun'
                                     ? Colors.redAccent
                                     : d == 'Sat'
                                     ? primaryColor
-                                    : const Color(0xFF827C7C),
+                                    : Color(0xFF827C7C),
                               ),
                             ),
                           ),
                         ),
                         if (index != 6)
-                          Container(width: 1, height: 25, color: lineColor),
+                          Container(width: 1.w, height: 25.h, color: lineColor),
                       ],
                     ),
                   );
@@ -571,9 +571,9 @@ class _HomePageState extends State<HomePage> {
             Column(
               children: <Widget>[
                 GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 7,
                     childAspectRatio: 0.75,
                   ),
@@ -596,30 +596,30 @@ class _HomePageState extends State<HomePage> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: isFutureDay
-                              ? const Color(0xFFE2E2E2)
+                              ? Color(0xFFE2E2E2)
                               : Colors.transparent,
                           border: Border(
                             right: BorderSide(
                               color: (index + 1) % 7 == 0
                                   ? Colors.transparent
                                   : lineColor,
-                              width: 1.0,
+                              width: 1.w,
                             ),
-                            bottom: BorderSide(color: lineColor, width: 1.0),
+                            bottom: BorderSide(color: lineColor, width: 1.w),
                           ),
                         ),
                         child: Stack(
                           children: [
                             Positioned(
-                              left: 3,
-                              top: 5,
+                              left: 3.w,
+                              top: 5.h,
                               child: Text(
                                 '${day.day}',
                                 style: TextStyle(
                                   fontFamily: 'PretendardRegular',
-                                  fontSize: 11,
+                                  fontSize: 11.sp,
                                   color: isCurrentMonth
-                                      ? const Color(0xFF827C7C)
+                                      ? Color(0xFF827C7C)
                                       : Colors.grey.withOpacity(0.2),
                                   fontWeight: currentEntry != null
                                       ? FontWeight.bold
@@ -629,8 +629,8 @@ class _HomePageState extends State<HomePage> {
                             ),
                             if (currentEntry != null)
                               Positioned(
-                                right: 7,
-                                bottom: 9,
+                                right: 7.w,
+                                bottom: 9.h,
                                 child: _buildEmojiWidget(currentEntry.emojiUrl),
                               ),
                           ],
@@ -639,7 +639,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
               ],
             ),
           ],
@@ -656,7 +656,7 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         leading: Container(),
-        title: SizedBox(height: 60, child: Image.asset('assets/cloud.png')),
+        title: SizedBox(height: 60.h, child: Image.asset('assets/cloud.png')),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(5.0),
           child: Divider(color: Color(0xFFEEEEEE), thickness: 5),

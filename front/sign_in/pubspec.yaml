@@ -50,6 +50,7 @@ dependencies:
   vertical_barchart: ^2.0.0+2
   fl_chart: ^1.1.1
   flutter_dotenv: ^6.0.0
+  flutter_screenutil: ^5.9.3
 
 dev_dependencies:
   flutter_test:

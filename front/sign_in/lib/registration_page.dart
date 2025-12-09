@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // 🔹 ScreenUtil 추가
 import 'services/auth_service.dart';
 import 'welcome_screen.dart';
 
@@ -19,6 +20,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   String? selectedGender;
   DateTime? selectedDate;
   bool agreePrivacy = false; // ✅ 개인정보 수집 동의 체크 상태
+  bool isIdChecked = false; // 🔹 아이디 중복 확인 여부
   final AuthService _authService = AuthService();
 
   @override
@@ -66,6 +68,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
+  // 🔹 TextField 크기 조정 ScreenUtil 적용
   Widget _buildTextField(
     TextEditingController controller,
     String hintText,
@@ -73,18 +76,19 @@ class _RegistrationPageState extends State<RegistrationPage> {
     bool isBirthdateField = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30.0),
+      padding: EdgeInsets.symmetric(horizontal: 30.w), // 🔹 수정
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         readOnly: isBirthdateField,
         onTap: isBirthdateField ? () => _selectDate(context) : null,
+        style: TextStyle(fontSize: 20.sp), // 🔹 ScreenUtil 적용
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
             fontFamily: 'GyeonggiTitle',
-            fontSize: 20,
-            color: Color(0xFFCFCFCF),
+            fontSize: 20.sp, // 🔹 ScreenUtil 적용
+            color: const Color(0xFFCFCFCF),
           ),
           suffixIcon: isBirthdateField
               ? const Icon(Icons.calendar_month, color: Color(0xFFCFCFCF))
@@ -102,12 +106,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Widget _buildIdFieldWithCheckButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30.0),
+      padding: EdgeInsets.symmetric(horizontal: 30.w), // 🔹 ScreenUtil 적용
       child: Stack(
         alignment: Alignment.centerRight,
         children: [
           TextField(
             controller: idController,
+            style: TextStyle(fontSize: 15.sp), // 🔹 ScreenUtil 적용
             decoration: const InputDecoration(
               hintText: "아이디",
               hintStyle: TextStyle(
@@ -125,25 +130,29 @@ class _RegistrationPageState extends State<RegistrationPage> {
           ),
           Positioned(
             right: 0,
-            bottom: 10,
+            bottom: 8.h, // 🔹 ScreenUtil 적용
             child: SizedBox(
-              height: 35,
+              height: 30.h, // 🔹 ScreenUtil 적용
               child: ElevatedButton(
-                onPressed: _checkDuplicate,
+                onPressed: _checkDuplicate, // ✅ 함수 그대로 유지
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF83B3FF),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(
+                      10.r,
+                    ), // 🔹 ScreenUtil 적용
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                  ), // 🔹 ScreenUtil 적용
                   elevation: 2,
                 ),
-                child: const Text(
+                child: Text(
                   "중복확인",
                   style: TextStyle(
                     fontFamily: 'GyeonggiTitle',
-                    fontSize: 15,
-                    color: Color(0xFFFFFFFF),
+                    fontSize: 15.sp, // 🔹 ScreenUtil 적용
+                    color: const Color(0xFFFFFFFF),
                   ),
                 ),
               ),
@@ -154,6 +163,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     );
   }
 
+  // 🔹 기존 중복 확인 함수 그대로 유지, 성공 시 isIdChecked true
   Future<void> _checkDuplicate() async {
     final id = idController.text.trim();
     if (id.isEmpty) {
@@ -177,6 +187,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
           ),
         ),
       );
+
+      setState(() {
+        isIdChecked = isAvailable; // 🔹 중복 확인 성공 여부 저장
+      });
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -187,10 +201,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget _buildGenderButton(String gender) {
     final isSelected = selectedGender == gender;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5.0),
+      padding: EdgeInsets.symmetric(horizontal: 5.w), // 🔹 ScreenUtil 적용
       child: SizedBox(
-        width: 143.0,
-        height: 39.0,
+        width: 143.w, // 🔹 ScreenUtil 적용
+        height: 39.h, // 🔹 ScreenUtil 적용
         child: ElevatedButton(
           onPressed: () => _selectGender(gender),
           style: ElevatedButton.styleFrom(
@@ -199,15 +213,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 : const Color(0xFFD9D9D9),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5.0),
+              borderRadius: BorderRadius.circular(5.r), // 🔹 ScreenUtil 적용
             ),
             elevation: 0,
           ),
           child: Text(
             gender,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'GyeonggiTitle',
-              fontSize: 24,
+              fontSize: 22.sp, // 🔹 ScreenUtil 적용
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -276,7 +290,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         title: SizedBox(
-          height: 60,
+          height: 60.h, // 🔹 ScreenUtil 적용
           child: Image.asset(
             'assets/cloud.png',
             errorBuilder: (context, error, stackTrace) {
@@ -288,42 +302,42 @@ class _RegistrationPageState extends State<RegistrationPage> {
           ),
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: const Color(0xFFEEEEEE), height: 5.0),
+          preferredSize: Size.fromHeight(5.h), // 🔹 ScreenUtil 적용
+          child: Container(color: const Color(0xFFEEEEEE), height: 5.h),
         ),
         elevation: 0.0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w), // 🔹 ScreenUtil 적용
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 30),
-            const Center(
+            SizedBox(height: 15.h), // 🔹 ScreenUtil 적용
+            Center(
               child: Text(
                 "회원가입",
                 style: TextStyle(
                   fontFamily: 'Gyeonggibatang',
-                  fontSize: 35,
-                  color: Color(0xFF5A9AFF),
+                  fontSize: 33.sp, // 🔹 ScreenUtil 적용
+                  color: const Color(0xFF5A9AFF),
                 ),
               ),
             ),
-            const SizedBox(height: 50),
+            SizedBox(height: 40.h), // 🔹 ScreenUtil 적용
 
             _buildTextField(nameController, "이름 (실명 입력)", false),
-            const SizedBox(height: 30),
+            SizedBox(height: 25.h), // 🔹 ScreenUtil 적용
             _buildIdFieldWithCheckButton(),
-            const SizedBox(height: 30),
+            SizedBox(height: 25.h), // 🔹 ScreenUtil 적용
             _buildTextField(passwordController, "비밀번호", true),
-            const SizedBox(height: 30),
+            SizedBox(height: 25.h), // 🔹 ScreenUtil 적용
             _buildTextField(
               birthController,
               "생년월일",
               false,
               isBirthdateField: true,
             ),
-            const SizedBox(height: 40),
+            SizedBox(height: 35.h), // 🔹 ScreenUtil 적용
 
             Center(
               child: Row(
@@ -331,11 +345,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 children: [_buildGenderButton("남성"), _buildGenderButton("여성")],
               ),
             ),
-            const SizedBox(height: 15),
-
+            SizedBox(height: 15.h), // 🔹 ScreenUtil 적용
             // ✅ 개인정보 수집 동의 체크박스
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: 15.w,
+              ), // 🔹 ScreenUtil 적용
               child: Row(
                 children: [
                   Checkbox(
@@ -347,12 +362,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     },
                     activeColor: const Color(0xFF5A9AFF),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       '개인정보 제 3자 제공 동의(필수)',
                       style: TextStyle(
                         fontFamily: 'GyeonggiTitle',
-                        fontSize: 16,
+                        fontSize: 16.sp, // 🔹 ScreenUtil 적용
                       ),
                     ),
                   ),
@@ -360,34 +375,37 @@ class _RegistrationPageState extends State<RegistrationPage> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: 15.h), // 🔹 ScreenUtil 적용
             Center(
               child: SizedBox(
-                width: 295,
-                height: 59,
+                width: 295.w, // 🔹 ScreenUtil 적용
+                height: 59.h, // 🔹 ScreenUtil 적용
                 child: ElevatedButton(
-                  onPressed: agreePrivacy ? _register : null, // ✅ 동의해야 활성화
+                  // 🔹 동의 + 아이디 중복 확인 완료 시 활성화
+                  onPressed: agreePrivacy && isIdChecked ? _register : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: agreePrivacy
+                    backgroundColor: agreePrivacy && isIdChecked
                         ? const Color(0xFF5A9AFF)
                         : Colors.grey,
                     elevation: 5.0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+                      borderRadius: BorderRadius.circular(
+                        10.r,
+                      ), // 🔹 ScreenUtil 적용
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     "회원가입",
                     style: TextStyle(
                       fontFamily: 'GyeonggiTitle',
-                      fontSize: 30,
+                      fontSize: 30.sp, // 🔹 ScreenUtil 적용
                       color: Colors.white,
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h), // 🔹 ScreenUtil 적용
           ],
         ),
       ),

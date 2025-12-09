@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sign_in/main.dart';
 import 'services/mypage_service.dart';
 import 'services/auth_service.dart';
@@ -35,7 +36,6 @@ class _MyPageState extends State<MyPage> {
   }
 
   Future<void> handleLogout() async {
-    // 팝업 띄우기
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -43,32 +43,32 @@ class _MyPageState extends State<MyPage> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
           child: SizedBox(
-            width: 160,
-            height: 200,
+            width: 160.w,
+            height: 200.h,
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12.w),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (myPageData != null)
-                    Image.asset('assets/cloud.png', width: 60, height: 60),
-                  const SizedBox(height: 10),
-                  const Text(
+                    Image.asset('assets/cloud.png', width: 60.w, height: 60.h),
+                  SizedBox(height: 10.h),
+                  Text(
                     "로그아웃..",
                     style: TextStyle(
-                      fontSize: 25,
+                      fontSize: 25.sp,
                       fontFamily: 'GyeonggiTitle',
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF5A9AFF),
                     ),
                   ),
-                  const SizedBox(height: 15),
-                  const CircularProgressIndicator(
+                  SizedBox(height: 15.h),
+                  CircularProgressIndicator(
                     color: Color(0xFF4E93FF),
-                    strokeWidth: 5,
+                    strokeWidth: 5.w,
                   ),
                 ],
               ),
@@ -78,21 +78,12 @@ class _MyPageState extends State<MyPage> {
       },
     );
 
-    // 2초 동안 팝업 유지
     await Future.delayed(const Duration(seconds: 2));
 
-    // 실제 로그아웃
     await myPageService.authService.logout();
 
-    // 🔥 팝업 닫기
     if (mounted) Navigator.of(context).pop();
 
-    // 🔥 팝업 닫힌 후 다음 프레임에 화면 이동 실행
-    //
-    //   WidgetsBinding.instance.addPostFrameCallback
-    //
-    // 이걸 쓰면 팝업 닫히는 애니메이션이 완전히 끝난 다음에
-    // 화면 이동이 실행되어 절대 팝업이 남지 않는다!
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
@@ -103,7 +94,6 @@ class _MyPageState extends State<MyPage> {
   }
 
   Future<void> handleDeleteAccount() async {
-    // 로딩 팝업 띄우기
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -111,42 +101,42 @@ class _MyPageState extends State<MyPage> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
           child: SizedBox(
-            width: 180,
-            height: 220,
+            width: 180.w,
+            height: 220.h,
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12.w),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/cloud.png', width: 60, height: 60),
-                  const SizedBox(height: 10),
-                  const Text(
+                  Image.asset('assets/cloud.png', width: 60.w, height: 60.h),
+                  SizedBox(height: 10.h),
+                  Text(
                     "그동안 감사했습니다.",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'GyeonggiTitle',
                       color: Color(0xFF297BFB),
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 5),
-                  const Text(
+                  SizedBox(height: 5.h),
+                  Text(
                     "추억을 기록하고 싶은 날 다시 찾아주세요!",
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       fontFamily: 'GyeonggiTitle',
                       color: Color(0xFF1F74F8),
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 10),
-                  const CircularProgressIndicator(
+                  SizedBox(height: 10.h),
+                  CircularProgressIndicator(
                     color: Color(0xFF4E93FF),
-                    strokeWidth: 5,
+                    strokeWidth: 5.w,
                   ),
                 ],
               ),
@@ -156,19 +146,17 @@ class _MyPageState extends State<MyPage> {
       },
     );
 
-    // 2초 후 화면 즉시 이동
     await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
-    Navigator.of(context).pop(); // 로딩 팝업 닫기
+    Navigator.of(context).pop();
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const MyApp()),
       (route) => false,
     );
 
-    // API는 뒤에서 처리
     myPageService.authService.deleteAccount();
   }
 
@@ -180,100 +168,88 @@ class _MyPageState extends State<MyPage> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(15.r),
           ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 30),
+          insetPadding: EdgeInsets.symmetric(horizontal: 30.w),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 30),
-
-              const Text(
+              SizedBox(height: 30.h),
+              Text(
                 '정말 계정을 지우실 건가요?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Pretendard',
-                  fontSize: 24,
+                  fontSize: 24.sp,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1F74F8),
                 ),
               ),
-
-              const SizedBox(height: 5),
-
-              const Text(
+              SizedBox(height: 5.h),
+              Text(
                 '모든 일기가 삭제되며, 복구할 수 없습니다.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Pretendard',
-                  fontSize: 13,
+                  fontSize: 13.sp,
                   color: Color(0xFF1F74F8),
                 ),
               ),
-
-              const SizedBox(height: 30),
-
+              SizedBox(height: 30.h),
               Row(
                 children: [
-                  // ---------------------------
-                  // (왼쪽) 계정 지우기 버튼 — 연한 색
-                  // ---------------------------
                   Expanded(
                     child: InkWell(
                       onTap: () {
-                        Navigator.of(context).pop(); // 다이얼로그 닫기
-                        handleDeleteAccount(); // 실제 탈퇴 + 로딩창
+                        Navigator.of(context).pop();
+                        handleDeleteAccount();
                       },
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(15),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(15.r),
                       ),
                       child: Container(
-                        height: 56,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF99BEF7), // 연한 파랑
+                        height: 56.h,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF99BEF7),
                           borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(15),
+                            bottomLeft: Radius.circular(15.r),
                           ),
                         ),
                         alignment: Alignment.center,
-                        child: const Text(
+                        child: Text(
                           '계정 지우기',
                           style: TextStyle(
                             color: Colors.white,
                             fontFamily: 'Pretendard',
-                            fontSize: 18,
+                            fontSize: 18.sp,
                           ),
                         ),
                       ),
                     ),
                   ),
-
-                  // ---------------------------
-                  // (오른쪽) 취소 버튼 — 진한 색
-                  // ---------------------------
                   Expanded(
                     child: InkWell(
                       onTap: () {
-                        Navigator.of(context).pop(); // 닫기만
+                        Navigator.of(context).pop();
                       },
-                      borderRadius: const BorderRadius.only(
-                        bottomRight: Radius.circular(15),
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(15.r),
                       ),
                       child: Container(
-                        height: 56,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF5A9AFF), // 진한 파랑
+                        height: 56.h,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF5A9AFF),
                           borderRadius: BorderRadius.only(
-                            bottomRight: Radius.circular(15),
+                            bottomRight: Radius.circular(15.r),
                           ),
                         ),
                         alignment: Alignment.center,
-                        child: const Text(
+                        child: Text(
                           '취소',
                           style: TextStyle(
                             color: Colors.white,
                             fontFamily: 'Pretendard',
-                            fontSize: 18,
+                            fontSize: 18.sp,
                           ),
                         ),
                       ),
@@ -298,48 +274,42 @@ class _MyPageState extends State<MyPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 25),
-          const Center(
+          SizedBox(height: 25.h),
+          Center(
             child: Text(
               "마이 페이지",
               style: TextStyle(
                 fontFamily: 'GyeonggiBatang',
-                fontSize: 32,
+                fontSize: 32.sp,
                 color: Color(0xFF1A6DFF),
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
 
-          // ==========================
-          //  로딩 & 데이터 처리
-          // ==========================
           if (isLoading)
-            const Center(child: CircularProgressIndicator())
+            Center(child: CircularProgressIndicator())
           else if (myPageData == null)
-            const Center(child: Text("마이페이지 데이터를 불러올 수 없습니다."))
+            Center(child: Text("마이페이지 데이터를 불러올 수 없습니다."))
           else ...[
-            // ==========================
-            // 📦 1번 박스 : 사용자 정보
-            // ==========================
+            // 📦 1번 박스
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              padding: const EdgeInsets.all(16),
+              margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFF7FAFF),
-                borderRadius: BorderRadius.circular(12),
+                color: Color(0xFFF7FAFF),
+                borderRadius: BorderRadius.circular(12.r),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
+                    blurRadius: 5.r,
+                    offset: Offset(0, 2.h),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 이름 + 아이디
                   Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -353,17 +323,17 @@ class _MyPageState extends State<MyPage> {
                                 children: [
                                   TextSpan(
                                     text: myPageData!['user_name'] ?? '',
-                                    style: const TextStyle(
-                                      fontSize: 18,
+                                    style: TextStyle(
+                                      fontSize: 18.sp,
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'GyeonggiTitle',
                                       color: Color(0xFF000000),
                                     ),
                                   ),
-                                  const TextSpan(
+                                  TextSpan(
                                     text: "님",
                                     style: TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 18.sp,
                                       fontFamily: 'GyeonggiTitle',
                                       color: Color(0xFF000000),
                                     ),
@@ -371,38 +341,33 @@ class _MyPageState extends State<MyPage> {
                                 ],
                               ),
                             ),
-
-                            const SizedBox(width: 10),
-
+                            SizedBox(width: 10.w),
                             Text(
                               "@${myPageData!['user_id'] ?? ''}",
-                              style: const TextStyle(
-                                fontSize: 14,
+                              style: TextStyle(
+                                fontSize: 14.sp,
                                 fontFamily: 'Pretendard',
                                 color: Color(0xFF8B8585),
                               ),
                             ),
                           ],
                         ),
-
-                        const SizedBox(height: 10),
-
-                        // ⭐ 함께한지 (라벨만 bold)
+                        SizedBox(height: 10.h),
                         RichText(
                           text: TextSpan(
                             children: [
-                              const TextSpan(
+                              TextSpan(
                                 text: "함께 한 지 : ",
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16.sp,
                                   fontFamily: 'GyeonggiTitle',
                                   color: Color(0xFF626262),
                                 ),
                               ),
                               TextSpan(
                                 text: "${myPageData!['start_date'] ?? ''}일",
-                                style: const TextStyle(
-                                  fontSize: 16,
+                                style: TextStyle(
+                                  fontSize: 16.sp,
                                   fontFamily: 'GyeonggiTitle',
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF626262),
@@ -411,28 +376,25 @@ class _MyPageState extends State<MyPage> {
                             ],
                           ),
                         ),
-
-                        const SizedBox(height: 5),
-
-                        // ⭐ 가입날짜 (라벨만 bold)
+                        SizedBox(height: 5.h),
                         RichText(
                           text: TextSpan(
                             children: [
-                              const TextSpan(
+                              TextSpan(
                                 text: "가입날짜 : ",
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16.sp,
                                   fontFamily: 'GyeonggiTitle',
                                   color: Color(0xFF626262),
                                 ),
                               ),
                               TextSpan(
                                 text: formattedDate,
-                                style: const TextStyle(
-                                  fontSize: 16,
+                                style: TextStyle(
+                                  fontSize: 16.sp,
                                   fontFamily: 'GyeonggiTitle',
-                                  color: Color(0xFF626262),
                                   fontWeight: FontWeight.bold,
+                                  color: Color(0xFF626262),
                                 ),
                               ),
                             ],
@@ -445,39 +407,33 @@ class _MyPageState extends State<MyPage> {
               ),
             ),
 
-            // ==========================
-            // 📦 2번 박스 : 구르밍 점수
-            // ==========================
+            // 📦 2번 박스
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              padding: const EdgeInsets.all(16),
+              margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFF7FAFF),
-                borderRadius: BorderRadius.circular(12),
+                color: Color(0xFFF7FAFF),
+                borderRadius: BorderRadius.circular(12.r),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
+                    blurRadius: 5.r,
+                    offset: Offset(0, 2.h),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 제목
-                  const Text(
+                  Text(
                     "나의 구르밍 점수",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'GyeonggiTitle',
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // 감정점수 / 100
+                  SizedBox(height: 20.h),
                   Center(
                     child: RichText(
                       textAlign: TextAlign.center,
@@ -485,8 +441,8 @@ class _MyPageState extends State<MyPage> {
                         children: [
                           TextSpan(
                             text: "${myPageData!['user_emotion_score'] ?? 0} ",
-                            style: const TextStyle(
-                              fontSize: 40,
+                            style: TextStyle(
+                              fontSize: 40.sp,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1A6DFF),
                               fontFamily: 'GyeonggiTitle',
@@ -494,8 +450,8 @@ class _MyPageState extends State<MyPage> {
                           ),
                           TextSpan(
                             text: "/ 100점",
-                            style: const TextStyle(
-                              fontSize: 18,
+                            style: TextStyle(
+                              fontSize: 18.sp,
                               color: Color(0xFF1A6DFF),
                               fontFamily: 'GyeonggiTitle',
                             ),
@@ -504,14 +460,10 @@ class _MyPageState extends State<MyPage> {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 14),
-
-                  // 사용자 글쓰기 공간처럼 보이는 박스
+                  SizedBox(height: 14.h),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 🔹 문단 1
                       RichText(
                         text: TextSpan(
                           children: [
@@ -521,7 +473,7 @@ class _MyPageState extends State<MyPage> {
                               style: TextStyle(
                                 fontFamily: 'Pretendard',
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 color: Color(0xFF626262),
                               ),
                             ),
@@ -529,7 +481,7 @@ class _MyPageState extends State<MyPage> {
                               text:
                                   "입니다. 이 점수는 사용자가 자신의 감정 변화 흐름을 간단히 확인하고, 일상 속에서 느꼈던 감정 패턴을 되돌아보는 데 도움을 드리기 위해 제공됩니다.",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 fontFamily: 'Pretendard',
                                 color: Color(0xFF626262),
                               ),
@@ -537,9 +489,7 @@ class _MyPageState extends State<MyPage> {
                           ],
                         ),
                       ),
-                      SizedBox(height: 10),
-
-                      // 🔹 문단 2
+                      SizedBox(height: 10.h),
                       RichText(
                         text: TextSpan(
                           children: [
@@ -547,7 +497,7 @@ class _MyPageState extends State<MyPage> {
                               text:
                                   " 다만, 감정 점수는 AI 자연어 처리 기술을 활용하여 일기 텍스트에 나타난 표현을 분석한 결과일 뿐이며,",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 fontFamily: 'Pretendard',
                                 color: Color(0xFF626262),
                               ),
@@ -557,7 +507,7 @@ class _MyPageState extends State<MyPage> {
                                   " 정신건강의학과 전문 평가나 심리검사, 임상 진단 기준 등을 기반으로 산출된 값이 아닙니다. ",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 fontFamily: 'Pretendard',
                                 color: Color(0xFF626262),
                               ),
@@ -566,7 +516,7 @@ class _MyPageState extends State<MyPage> {
                               text:
                                   "즉, 감정 점수는 참고용이며 정확한 임상 판단 지표가 아닙니다.\n따라서 이 점수는 사용자의 실제 정신건강 상태를 판단하거나 의료적 결론을 내리기 위한 도구로 사용될 수 없으며,",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 color: Color(0xFF626262),
                                 fontFamily: 'Pretendard',
                               ),
@@ -574,7 +524,7 @@ class _MyPageState extends State<MyPage> {
                             TextSpan(
                               text: " 치료, 상담, 진단 등 의료 행위로 간주되지 않습니다.",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 fontFamily: 'Pretendard',
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF626262),
@@ -583,9 +533,7 @@ class _MyPageState extends State<MyPage> {
                           ],
                         ),
                       ),
-                      SizedBox(height: 10),
-
-                      // 🔹 문단 4
+                      SizedBox(height: 10.h),
                       RichText(
                         text: TextSpan(
                           children: [
@@ -593,7 +541,7 @@ class _MyPageState extends State<MyPage> {
                               text: " 또한 감정은 개인의 환경, 상태, 상황 변화에 크게 달라질 수 있으며, ",
                               style: TextStyle(
                                 fontFamily: 'Pretendard',
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 color: Color(0xFF626262),
                               ),
                             ),
@@ -603,19 +551,17 @@ class _MyPageState extends State<MyPage> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Pretendard',
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 color: Color(0xFF626262),
                               ),
                             ),
                           ],
                         ),
                       ),
-
-                      // 🔹 문단 5 (일반체)
                       Text(
                         "만약 최근 감정 변화로 인해 어려움을 느끼거나 일상생활에 지장이 생긴다면, 전문 상담 센터, 정신건강복지센터 또는 의료 전문가와의 상담을 권장드립니다.",
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 14.sp,
                           color: Color(0xFF626262),
                           fontFamily: 'Pretendard',
                         ),
@@ -626,64 +572,58 @@ class _MyPageState extends State<MyPage> {
               ),
             ),
 
-            // ==========================
-            // 📦 3번 박스 : 로그아웃
-            // ==========================
+            // 📦 3번 박스
             GestureDetector(
-              onTap: handleLogout, // 🔹 여기가 핵심
+              onTap: handleLogout,
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                padding: const EdgeInsets.all(16),
+                margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7FAFF),
-                  borderRadius: BorderRadius.circular(12),
+                  color: Color(0xFFF7FAFF),
+                  borderRadius: BorderRadius.circular(12.r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
+                      blurRadius: 5.r,
+                      offset: Offset(0, 2.h),
                     ),
                   ],
                 ),
-                // 글자도 가운데 정렬
                 child: Text(
                   "로그아웃",
                   style: TextStyle(
                     fontFamily: 'GyeonggiTitle',
-                    fontSize: 20,
+                    fontSize: 20.sp,
                     color: Color(0xFFFF6262),
                   ),
                 ),
               ),
             ),
 
-            // ==========================
-            // 📦 4번 박스 : 회원 탈퇴
-            // ==========================
-            // 1️⃣ 회원탈퇴 버튼 눌렀을 때
+            // 📦 4번 박스
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              padding: const EdgeInsets.all(16),
+              margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFF7FAFF),
-                borderRadius: BorderRadius.circular(12),
+                color: Color(0xFFF7FAFF),
+                borderRadius: BorderRadius.circular(12.r),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
+                    blurRadius: 5.r,
+                    offset: Offset(0, 2.h),
                   ),
                 ],
               ),
               child: InkWell(
                 onTap: () {
-                  _showDeleteAccountDialog(); // 2️⃣ 확인 팝업 호출
+                  _showDeleteAccountDialog();
                 },
-                child: const Text(
+                child: Text(
                   "회원 탈퇴",
                   style: TextStyle(
                     fontFamily: 'GyeonggiTitle',
-                    fontSize: 20,
+                    fontSize: 20.sp,
                     color: Color(0xFF626262),
                   ),
                 ),
