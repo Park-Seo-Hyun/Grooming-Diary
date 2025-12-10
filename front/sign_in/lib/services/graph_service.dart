@@ -5,7 +5,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../graph/models/monthly_graph.dart';
 
 class GraphService {
-  static final String baseUrl = dotenv.env['BASE_URL']!;
+  static final String baseUrl = dotenv.env['BASE_URL']!.trim();
+
   final storage = const FlutterSecureStorage();
 
   Future<MonthlyGraphData?> getMonthlyGraphData(String yearMonth) async {

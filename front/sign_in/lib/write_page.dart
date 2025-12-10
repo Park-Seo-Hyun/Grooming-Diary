@@ -30,7 +30,7 @@ class _WritePageState extends State<WritePage> {
     });
 
     try {
-      final String baseUrl = dotenv.env['BASE_URL']!;
+      final String baseUrl = dotenv.env['BASE_URL']!.trim();
       final String? token = await AuthService().getToken();
 
       if (token == null) {

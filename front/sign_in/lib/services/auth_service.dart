@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthService {
   final storage = const FlutterSecureStorage();
-  final String baseUrl = dotenv.env['BASE_URL']!;
+  final String baseUrl = dotenv.env['BASE_URL']!.trim();
 
   /// 🔐 로그인
   Future<Map<String, dynamic>> login({

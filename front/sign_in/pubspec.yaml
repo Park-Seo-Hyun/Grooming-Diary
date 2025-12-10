@@ -51,10 +51,19 @@ dependencies:
   fl_chart: ^1.1.1
   flutter_dotenv: ^6.0.0
   flutter_screenutil: ^5.9.3
+  flutter_launcher_icons: ^0.14.4
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/cloud.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

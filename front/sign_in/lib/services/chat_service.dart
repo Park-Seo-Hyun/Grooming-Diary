@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 
 class ChatService {
-  final String baseUrl = dotenv.env['BASE_URL']!;
+  final String baseUrl = dotenv.env['BASE_URL']!.trim();
 
   // 답변 가져오기 (String 반환)
   Future<String?> fetchAnswer(String questionId, String mode) async {

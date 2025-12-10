@@ -11,6 +11,7 @@ import 'write_page.dart';
 import 'my_page.dart';
 import 'navbar.dart';
 import 'services/diary_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -119,57 +120,40 @@ class _HomePageState extends State<HomePage> {
     final entry = diaryEntries[normalizedDay];
 
     if (entry != null) {
-      await Navigator.push(
+      // 기존 일기 상세 페이지로 이동
+      final result = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => DiaryDetailPage(
             diaryId: entry.id,
-            onDelete: () {
-              setState(() {
-                diaries.removeWhere((d) => d.id == entry.id);
-              });
+            onDelete: () async {
+              await _loadMonthlyDiaries(); // 삭제 즉시 반영
             },
-            onUpdate: (updatedEntry) {
-              setState(() {
-                final index = diaries.indexWhere(
-                  (d) => d.id == updatedEntry.id,
-                );
-                if (index != -1) diaries[index] = updatedEntry as DiaryEntry;
-              });
+            onUpdate: (updatedEntry) async {
+              await _loadMonthlyDiaries(); // 수정 즉시 반영
             },
+            // 기존 일기를 열 때는 isNewWrite를 전달할 필요가 없습니다. (기본값 false 사용)
           ),
         ),
       );
-    } else {
-      if (day.isAfter(DateTime.now())) return;
 
+      // 🔥🔥🔥 상세 페이지에서 pop(true) 받은 경우 즉시 갱신
+      if (result == true) {
+        await _loadMonthlyDiaries();
+      }
+    } else {
+      // 새 일기 작성
       final result = await Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => DiaryPage(selectedDate: day)),
       );
 
-      if (result != null && result is Map<String, dynamic>) {
-        try {
-          String formattedDate = DateFormat('yyyy-MM-dd').format(day);
-          String text = result['text'];
-          File? imageFile = result['image'];
-
-          final createdData = await _diaryService.createDiary({
-            'diary_date': formattedDate,
-            'content': text,
-          }, imageFile);
-          final createdEntry = DiaryEntry.fromJson(createdData);
-
-          setState(() {
-            diaryEntries[normalizedDay] = createdEntry;
-          });
-        } catch (e) {
-          print("일기 작성 에러: $e");
-          if (!mounted) return;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('일기 저장 중 오류가 발생했습니다.')));
-        }
+      // 🔥 [수정] 새 일기 저장 후 즉시 갱신!
+      // DiaryPage에서 pushReplacement -> DiaryDetailPage로 이동한 후,
+      // DiaryDetailPage에서 뒤로가기 시 `true`를 반환하도록 로직을 변경했으므로,
+      // 여기서 `result == true`를 확인하면 됩니다.
+      if (result == true) {
+        await _loadMonthlyDiaries();
       }
     }
   }
@@ -392,15 +376,36 @@ class _HomePageState extends State<HomePage> {
     if (imageUrl == null || imageUrl.isEmpty) {
       return Icon(Icons.mood, size: 40.sp, color: Colors.grey);
     }
-    return Image.network(
-      imageUrl,
+
+    // 서버 URL이 상대 경로일 경우를 대비해 처리 필요
+    String fullUrl = imageUrl.startsWith('http')
+        ? imageUrl
+        : "${_diaryService.baseUrl}$imageUrl";
+
+    return CachedNetworkImage(
+      imageUrl: fullUrl,
       width: 40.w,
       height: 40.h,
       fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) {
-        print("Emoji network load error: $error");
-        return Icon(Icons.mood_bad, size: 40.sp, color: Colors.grey);
+      placeholder: (context, url) => SizedBox(
+        width: 20.w,
+        height: 20.h,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+      errorWidget: (context, url, error) {
+        print("❌ Emoji load error: $error, URL: $url");
+        return Image.network(
+          fullUrl, // 안전하게 fallback
+          width: 40.w,
+          height: 40.h,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) =>
+              Icon(Icons.mood_bad, size: 40.sp, color: Colors.grey),
+        );
       },
+      // 캐시 강제 설정
+      memCacheHeight: 100,
+      memCacheWidth: 100,
     );
   }
 

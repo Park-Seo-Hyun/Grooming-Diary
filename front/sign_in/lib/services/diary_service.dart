@@ -7,7 +7,9 @@ import 'auth_service.dart';
 
 class DiaryService {
   // .env에서 BASE_URL 읽기 (없으면 로컬호스트 기본값)
-  final String baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:3000';
+  final String baseUrl = (dotenv.env['BASE_URL'] ?? 'http://localhost:3000')
+      .trim();
+
   final AuthService _authService = AuthService();
 
   // 헤더 생성 (Bearer Token 포함)

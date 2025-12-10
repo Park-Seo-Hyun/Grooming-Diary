@@ -30,6 +30,8 @@ Future<void> main() async {
   // ⬇️ .env 파일 로드
   await dotenv.load(fileName: ".env");
 
+  String albUrl = dotenv.env['BASE_URL']!.trim();
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => DiaryProvider(),

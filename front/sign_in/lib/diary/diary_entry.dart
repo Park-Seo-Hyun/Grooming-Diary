@@ -41,7 +41,8 @@ class DiaryEntry {
     }
 
     // BASE_URL + 상대 경로 처리
-    final String baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:3000';
+    final String baseUrl = (dotenv.env['BASE_URL'] ?? 'http://localhost:3000')
+        .trim();
     String? emojiUrl =
         json['emotion_emoji']?.toString() ??
         json['primary_image_url']?.toString();

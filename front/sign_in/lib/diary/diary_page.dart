@@ -10,8 +10,14 @@ import 'diary_detail_page.dart';
 class DiaryPage extends StatefulWidget {
   final DateTime selectedDate;
   final DiaryEntryDetail? initialEntry;
+  final bool isNewWrite;
 
-  const DiaryPage({super.key, required this.selectedDate, this.initialEntry});
+  const DiaryPage({
+    super.key,
+    required this.selectedDate,
+    this.initialEntry,
+    this.isNewWrite = false,
+  });
 
   @override
   State<DiaryPage> createState() => _DiaryPageState();
@@ -46,70 +52,71 @@ class _DiaryPageState extends State<DiaryPage> {
     double progress = 0;
     Timer? timer;
 
-    showDialog(
+    await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.r),
-          ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 50.w),
-          child: SizedBox(
-            width: 200.w,
-            height: 250.h,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: 20.h),
-                const Text(
-                  "일기를 분석하고 있습니다.",
-                  style: TextStyle(
-                    fontFamily: 'GyeonggiTitle',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF297BFB),
-                  ),
-                ),
-                SizedBox(height: 20.h),
-                SizedBox(height: 60.h, child: Image.asset('assets/cloud.png')),
-                SizedBox(height: 20.h),
-                const Text(
-                  "로딩중. .",
-                  style: TextStyle(
-                    fontFamily: 'GyeonggiTitle',
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF5A9AFF),
-                  ),
-                ),
-                SizedBox(height: 20.h),
-                StatefulBuilder(
-                  builder: (context, setState) {
-                    if (timer == null) {
-                      const totalMs = 7000;
-                      const tickMs = 20;
-                      final totalTicks = totalMs / tickMs;
-                      final step = 1 / totalTicks * 5.0;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // Timer가 아직 생성되지 않았으면 생성
+            if (timer == null) {
+              const totalMs = 7000; // 팝업 전체 시간
+              const tickMs = 20; // 50fps 정도
+              final totalTicks = totalMs / tickMs;
+              final step = 1 / totalTicks; // 부드럽게 증가
 
-                      timer = Timer.periodic(
-                        const Duration(milliseconds: tickMs),
-                        (t) {
-                          if (progress >= 1) {
-                            t.cancel();
-                            Navigator.pop(context);
-                          } else {
-                            setState(() {
-                              progress += step;
-                              if (progress > 1) progress = 1;
-                            });
-                          }
-                        },
-                      );
-                    }
+              timer = Timer.periodic(const Duration(milliseconds: tickMs), (t) {
+                if (progress >= 1) {
+                  t.cancel();
+                  Navigator.pop(context); // 팝업 닫기
+                } else {
+                  setState(() {
+                    progress += step;
+                    if (progress > 1) progress = 1;
+                  });
+                }
+              });
+            }
 
-                    return Padding(
+            return Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.r),
+              ),
+              insetPadding: EdgeInsets.symmetric(horizontal: 50.w),
+              child: SizedBox(
+                width: 200.w,
+                height: 250.h,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 20.h),
+                    const Text(
+                      "일기를 분석하고 있습니다.",
+                      style: TextStyle(
+                        fontFamily: 'GyeonggiTitle',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF297BFB),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    SizedBox(
+                      height: 60.h,
+                      child: Image.asset('assets/cloud.png'),
+                    ),
+                    SizedBox(height: 20.h),
+                    const Text(
+                      "로딩중. .",
+                      style: TextStyle(
+                        fontFamily: 'GyeonggiTitle',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF5A9AFF),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    Padding(
                       padding: EdgeInsets.symmetric(horizontal: 30.w),
                       child: LinearProgressIndicator(
                         value: progress,
@@ -117,17 +124,17 @@ class _DiaryPageState extends State<DiaryPage> {
                         backgroundColor: const Color(0xFFE9F0FB),
                         color: const Color(0xFF5A9AFF),
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
-    ).then((_) {
-      timer?.cancel();
-    });
+    );
+
+    timer?.cancel();
   }
 
   Future<void> _saveDiary() async {
@@ -169,17 +176,25 @@ class _DiaryPageState extends State<DiaryPage> {
         Navigator.pop(context, updatedEntry);
         print("✅ 수정 완료 후 이전 화면으로 반환");
       } else {
-        Navigator.pushReplacement(
+        // 저장 성공하면 디테일 페이지로 이동
+        final detailResult = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => DiaryDetailPage(
-              diaryId: updatedEntry.id,
-              onDelete: () => Navigator.pop(context),
-              onUpdate: (entry) {},
+              diaryId: result['id'], // 서버에서 받은 id
+              onDelete: () => Navigator.pop(context, true),
+              onUpdate: (_) {},
+              isNewWrite: true,
             ),
           ),
         );
-        print("✅ 새 일기 저장 완료 후 디테일 페이지 이동");
+
+        // DiaryDetailPage에서 true를 반환하면 HomePage 갱신
+        if (detailResult == true) {
+          Navigator.pop(context, true);
+        }
+
+        print("📌 저장 후 디테일 페이지 이동 완료!");
       }
     } catch (e) {
       print("❌ 일기 저장 실패: $e");
@@ -403,7 +418,7 @@ class _DiaryPageState extends State<DiaryPage> {
                         ),
                         onPressed: () async {
                           await _showAnalyzingDialog();
-                          _saveDiary();
+                          await _saveDiary();
                         },
                       ),
                     ),
