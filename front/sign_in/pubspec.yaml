@@ -84,6 +84,12 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+    - assets/angry.png
+    - assets/fear.png
+    - assets/happy.png
+    - assets/sad.png
+    - assets/tender.png
+    - assets/neutral.png
     - .env
 
   # To add assets to your application, add an assets section, like this:

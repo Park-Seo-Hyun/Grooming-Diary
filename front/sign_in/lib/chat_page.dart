@@ -121,9 +121,13 @@ class _ChatPageState extends State<ChatPage> {
     if (textToSave.isEmpty) return;
 
     bool success;
-    if (answerText == null || answerText!.isEmpty) {
+    bool isModify = answerText != null && answerText!.isNotEmpty; // 수정 여부 체크
+
+    if (!isModify) {
+      // 새 글 저장
       success = await chatService.saveAnswer(widget.questionId, textToSave);
     } else {
+      // 기존 글 수정
       success = await chatService.modifyAnswer(widget.questionId, textToSave);
     }
 
@@ -134,7 +138,11 @@ class _ChatPageState extends State<ChatPage> {
         _controller.clear();
       });
       if (mounted) FocusScope.of(context).unfocus();
-      _showModifySuccessDialog(context);
+
+      if (isModify) {
+        // 수정일 때만 팝업
+        _showModifySuccessDialog(context);
+      }
     }
   }
 

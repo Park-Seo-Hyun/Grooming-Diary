@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   List<DiaryEntry> diaries = [];
   DateTime _focusedDay = DateTime.now();
   int _selectedIndex = 0;
+  bool _lowScorePopupShown = false;
 
   final Map<DateTime, DiaryEntry> diaryEntries = {};
   num userEmotionScore = 0;
@@ -35,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadUserName();
+
     _loadMonthlyDiaries();
   }
 
@@ -70,42 +72,49 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final response = await _diaryService.getMonthlyDiaries(monthlyYear);
-
       if (!mounted) return;
 
-      print("서버 응답: $response");
+      final List<dynamic> diariesList =
+          (response['diaries'] as List<dynamic>?) ?? [];
 
+      Map<DateTime, DiaryEntry> newEntries = {};
+      for (var item in diariesList) {
+        try {
+          final diaryEntry = DiaryEntry.fromJson(item);
+          DateTime dateKey = DateTime(
+            diaryEntry.date.year,
+            diaryEntry.date.month,
+            diaryEntry.date.day,
+          );
+          newEntries[dateKey] = diaryEntry;
+        } catch (e) {
+          print("❌ 일기 개별 파싱 오류: $e");
+        }
+      }
+
+      // 서버 점수 가져오기
+      num score = response['user_emotion_score'] is num
+          ? response['user_emotion_score']
+          : 0;
+
+      // 상태 업데이트
       setState(() {
-        diaryEntries.clear();
-        userEmotionScore = response['user_emotion_score'] is num
-            ? response['user_emotion_score']
-            : 0;
-
-        print("🔍 사용자 이름 세팅: $userName, 감정 점수: $userEmotionScore");
-
-        if (userEmotionScore < 55) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showLowScorePopup();
-          });
-        }
-
-        final List<dynamic> diariesList =
-            (response['diaries'] as List<dynamic>?) ?? [];
-
-        for (var item in diariesList) {
-          try {
-            final diaryEntry = DiaryEntry.fromJson(item); // URL 사용
-            DateTime dateKey = DateTime(
-              diaryEntry.date.year,
-              diaryEntry.date.month,
-              diaryEntry.date.day,
-            );
-            diaryEntries[dateKey] = diaryEntry;
-          } catch (e) {
-            print("❌ 일기 개별 파싱 오류: $e");
-          }
-        }
+        diaryEntries
+          ..clear()
+          ..addAll(newEntries);
+        userEmotionScore = score;
       });
+
+      // 🔥 팝업 조건: 점수 < 70 && 아직 세션 내에서 안 띄움
+      if (userEmotionScore < 70 && !_lowScorePopupShown) {
+        _lowScorePopupShown = true;
+
+        // 다음 프레임에서 팝업 띄우기
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _showLowScorePopup();
+        });
+      }
     } catch (e) {
       print("❌ 월별 일기 로드 실패 상세: $e");
       if (!mounted) return;
@@ -174,7 +183,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           content: Text(
-            '오늘도 $userName님의 추엇을 남기러 와주어서 고마워요.\n\n'
+            '오늘도 $userName님의 추억을 남기러 와주어서 고마워요.\n\n'
             '요즘 마음이 많이 지쳐있으신 거 같아요.\n'
             '이러한 감정 점수는 잘못된 것이 아닌 그만큼 마음이 지쳐있다는 작은 신호일 뿐이에요.\n\n'
             '혹시 계속 힘든 감정이 이어진다면,\n전문가와 잠시 이야기 나누는 것도 도움이 될 수 있어요.\n\n'

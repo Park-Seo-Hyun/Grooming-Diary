@@ -25,242 +25,304 @@ class _MyPageState extends State<MyPage> {
   }
 
   Future<void> fetchData() async {
-    setState(() {
-      isLoading = true;
-    });
-    final data = await myPageService.fetchMyPageData();
-    setState(() {
-      myPageData = data;
-      isLoading = false;
-    });
+    setState(() => isLoading = true);
+    try {
+      // 서버 지연 대비 timeout 5초
+      final data = await myPageService.fetchMyPageData().timeout(
+        const Duration(seconds: 5),
+      );
+      setState(() {
+        myPageData = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        myPageData = null;
+        isLoading = false;
+      });
+      // 실패 시 안내 메시지
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('서버 연결 실패. 잠시 후 다시 시도해주세요.')));
+    }
   }
+
+  bool _isLoggingOut = false;
 
   Future<void> handleLogout() async {
-    showDialog(
+    if (_isLoggingOut) return;
+    _isLoggingOut = true;
+
+    // 팝업 띄우기
+    final dialogFuture = showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: SizedBox(
-            width: 160.w,
-            height: 200.h,
-            child: Padding(
-              padding: EdgeInsets.all(12.w),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (myPageData != null)
-                    Image.asset('assets/cloud.png', width: 60.w, height: 60.h),
-                  SizedBox(height: 10.h),
-                  Text(
-                    "로그아웃..",
-                    style: TextStyle(
-                      fontSize: 25.sp,
-                      fontFamily: 'GyeonggiTitle',
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF5A9AFF),
-                    ),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: SizedBox(
+          width: 160.w,
+          height: 200.h,
+          child: Padding(
+            padding: EdgeInsets.all(12.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (myPageData != null)
+                  Image.asset('assets/cloud.png', width: 60.w, height: 60.h),
+                SizedBox(height: 10.h),
+                Text(
+                  "로그아웃..",
+                  style: TextStyle(
+                    fontSize: 25.sp,
+                    fontFamily: 'GyeonggiTitle',
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF5A9AFF),
                   ),
-                  SizedBox(height: 15.h),
-                  CircularProgressIndicator(
-                    color: Color(0xFF4E93FF),
-                    strokeWidth: 5.w,
-                  ),
-                ],
-              ),
+                ),
+                SizedBox(height: 15.h),
+                CircularProgressIndicator(
+                  color: Color(0xFF4E93FF),
+                  strokeWidth: 5.w,
+                ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      await Future.wait([
+        Future.delayed(const Duration(seconds: 3)),
+        myPageService.authService.logout().timeout(const Duration(seconds: 5)),
+      ]);
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // 팝업 닫기
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('로그아웃 실패. 다시 시도해주세요.')));
+        _isLoggingOut = false;
+        return;
+      }
+    }
 
-    await myPageService.authService.logout();
+    if (mounted) {
+      // 1️⃣ 팝업 먼저 닫기
+      await Navigator.of(context, rootNavigator: true).maybePop();
 
-    if (mounted) Navigator.of(context).pop();
+      // 2️⃣ 안전하게 화면 이동
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MyApp()),
+          (route) => false,
+        );
+      });
+    }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const MyApp()),
-        (route) => false,
-      );
-    });
+    await dialogFuture;
+    _isLoggingOut = false;
   }
 
+  bool _isDeletingAccount = false;
+
   Future<void> handleDeleteAccount() async {
-    showDialog(
+    if (_isDeletingAccount) return; // 중복 실행 방지
+    _isDeletingAccount = true;
+
+    // 팝업 띄우기
+    final dialogFuture = showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: SizedBox(
-            width: 180.w,
-            height: 220.h,
-            child: Padding(
-              padding: EdgeInsets.all(12.w),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset('assets/cloud.png', width: 60.w, height: 60.h),
-                  SizedBox(height: 10.h),
-                  Text(
-                    "그동안 감사했습니다.",
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'GyeonggiTitle',
-                      color: Color(0xFF297BFB),
-                    ),
-                    textAlign: TextAlign.center,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: SizedBox(
+          width: 180.w,
+          height: 220.h,
+          child: Padding(
+            padding: EdgeInsets.all(12.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/cloud.png', width: 60.w, height: 60.h),
+                SizedBox(height: 10.h),
+                Text(
+                  "그동안 감사했습니다.",
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'GyeonggiTitle',
+                    color: Color(0xFF297BFB),
                   ),
-                  SizedBox(height: 5.h),
-                  Text(
-                    "추억을 기록하고 싶은 날 다시 찾아주세요!",
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontFamily: 'GyeonggiTitle',
-                      color: Color(0xFF1F74F8),
-                    ),
-                    textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 5.h),
+                Text(
+                  "추억을 기록하고 싶은 날 다시 찾아주세요!",
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontFamily: 'GyeonggiTitle',
+                    color: Color(0xFF1F74F8),
                   ),
-                  SizedBox(height: 10.h),
-                  CircularProgressIndicator(
-                    color: Color(0xFF4E93FF),
-                    strokeWidth: 5.w,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 10.h),
+                CircularProgressIndicator(
+                  color: Color(0xFF4E93FF),
+                  strokeWidth: 5.w,
+                ),
+              ],
             ),
           ),
+        ),
+      ),
+    );
+
+    try {
+      // 최소 3초 로딩 + 서버 요청 동시 진행
+      await Future.wait([
+        Future.delayed(const Duration(seconds: 3)),
+        myPageService.authService.deleteAccount().timeout(
+          const Duration(seconds: 5),
+        ),
+      ]);
+    } catch (e) {
+      if (mounted) {
+        // 팝업 닫기
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('계정 삭제 실패. 다시 시도해주세요.')));
+        _isDeletingAccount = false;
+        return;
+      }
+    }
+
+    if (mounted) {
+      // 팝업 먼저 닫기
+      await Navigator.of(context, rootNavigator: true).maybePop();
+
+      // 앱 초기화 화면 이동
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MyApp()),
+          (route) => false,
         );
-      },
-    );
+      });
+    }
 
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-
-    Navigator.of(context).pop();
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const MyApp()),
-      (route) => false,
-    );
-
-    myPageService.authService.deleteAccount();
+    await dialogFuture; // Dialog Future 완료까지 기다림
+    _isDeletingAccount = false;
   }
 
   Future<void> _showDeleteAccountDialog() async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext ctx) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.r),
-          ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 30.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: 30.h),
-              Text(
-                '정말 계정을 지우실 건가요?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F74F8),
-                ),
+      builder: (BuildContext ctx) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.r),
+        ),
+        insetPadding: EdgeInsets.symmetric(horizontal: 30.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 30.h),
+            Text(
+              '정말 계정을 지우실 건가요?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 24.sp,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1F74F8),
               ),
-              SizedBox(height: 5.h),
-              Text(
-                '모든 일기가 삭제되며, 복구할 수 없습니다.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 13.sp,
-                  color: Color(0xFF1F74F8),
-                ),
+            ),
+            SizedBox(height: 5.h),
+            Text(
+              '모든 일기가 삭제되며, 복구할 수 없습니다.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 13.sp,
+                color: Color(0xFF1F74F8),
               ),
-              SizedBox(height: 30.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        handleDeleteAccount();
-                      },
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(15.r),
-                      ),
-                      child: Container(
-                        height: 56.h,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF99BEF7),
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(15.r),
-                          ),
+            ),
+            SizedBox(height: 30.h),
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).pop(); // 다이얼로그만 닫기
+                      handleDeleteAccount(); // 계정 삭제 진행
+                    },
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(15.r),
+                    ),
+                    child: Container(
+                      height: 56.h,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF99BEF7),
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(15.r),
                         ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '계정 지우기',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Pretendard',
-                            fontSize: 18.sp,
-                          ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '계정 지우기',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Pretendard',
+                          fontSize: 18.sp,
                         ),
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                      borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(15.r),
-                      ),
-                      child: Container(
-                        height: 56.h,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF5A9AFF),
-                          borderRadius: BorderRadius.only(
-                            bottomRight: Radius.circular(15.r),
-                          ),
+                ),
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).pop(); // 다이얼로그만 닫기
+                      // 여기서 handleLogout 같은 거 호출하면 안 됨
+                    },
+                    borderRadius: BorderRadius.only(
+                      bottomRight: Radius.circular(15.r),
+                    ),
+                    child: Container(
+                      height: 56.h,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF5A9AFF),
+                        borderRadius: BorderRadius.only(
+                          bottomRight: Radius.circular(15.r),
                         ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '취소',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Pretendard',
-                            fontSize: 18.sp,
-                          ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '취소',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Pretendard',
+                          fontSize: 18.sp,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -572,7 +634,7 @@ class _MyPageState extends State<MyPage> {
               ),
             ),
 
-            // 📦 3번 박스
+            // 📦 3번 박스 (로그아웃)
             GestureDetector(
               onTap: handleLogout,
               child: Container(
@@ -600,7 +662,7 @@ class _MyPageState extends State<MyPage> {
               ),
             ),
 
-            // 📦 4번 박스
+            // 📦 4번 박스 (회원 탈퇴)
             Container(
               margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
               padding: EdgeInsets.all(16.w),
@@ -616,9 +678,7 @@ class _MyPageState extends State<MyPage> {
                 ],
               ),
               child: InkWell(
-                onTap: () {
-                  _showDeleteAccountDialog();
-                },
+                onTap: _showDeleteAccountDialog,
                 child: Text(
                   "회원 탈퇴",
                   style: TextStyle(

@@ -121,6 +121,26 @@ class _GraphPageState extends State<GraphPage> {
   };
 
   void showEmotionPopup() {
+    // 팝업에 나타낼 순서
+    final List<String> fixedOrder = [
+      "happy",
+      "sad",
+      "angry",
+      "fear",
+      "tender",
+      "neutral",
+    ];
+
+    // 에셋 파일 이름 그대로 매핑
+    final Map<String, String> assetMap = {
+      "happy": "happy.png",
+      "sad": "sad.png",
+      "angry": "angry.png",
+      "fear": "fear.png",
+      "tender": "tender.png",
+      "neutral": "neutral.png",
+    };
+
     showDialog(
       context: context,
       builder: (context) {
@@ -170,12 +190,10 @@ class _GraphPageState extends State<GraphPage> {
             width: double.maxFinite,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: graphData!.emotionState.length,
+              itemCount: fixedOrder.length,
               itemBuilder: (context, index) {
-                final emotion = graphData!.emotionState[index];
-                final rawLabel = emotion.emotionLabel;
-                final label = emotion.emotionLabel.trim().toLowerCase();
-                final imageUrl = GraphService.baseUrl + emotion.emotionEmoji;
+                final label = fixedOrder[index];
+                final assetPath = "assets/${assetMap[label]}";
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,8 +201,8 @@ class _GraphPageState extends State<GraphPage> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Image.network(
-                          imageUrl,
+                        Image.asset(
+                          assetPath,
                           width: 70.w,
                           height: 70.h,
                           fit: BoxFit.contain,

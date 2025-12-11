@@ -28,6 +28,7 @@ class _DiaryPageState extends State<DiaryPage> {
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
   static const int maxLength = 100;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -219,213 +220,356 @@ class _DiaryPageState extends State<DiaryPage> {
     return const SizedBox.shrink();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        scrolledUnderElevation: 0,
-        centerTitle: true,
-        backgroundColor: Colors.white,
+  Future<bool> _showExitDialog() async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.r),
+              ),
+              insetPadding: EdgeInsets.symmetric(horizontal: 30.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: 30.h),
+                  Text(
+                    '그만 작성하실 건가요?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1F74F8),
+                    ),
+                  ),
+                  SizedBox(height: 5.h),
+                  Text(
+                    '작성 중인 일기는 저장되지 않습니다.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 13.sp,
+                      color: Color(0xFF1F74F8),
+                    ),
+                  ),
+                  SizedBox(height: 30.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.of(context).pop(
+                              true,
+                            ); // true 반환 → WillPopScope에서 뒤로가기 허용 → HomePage로 이동
+                          },
 
-        title: SizedBox(height: 60.h, child: Image.asset('assets/cloud.png')),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(5.0),
-          child: Divider(color: Color(0xFFEEEEEE), thickness: 5),
-        ),
-        elevation: 0.0,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(30.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                "${widget.selectedDate.year}.${widget.selectedDate.month.toString().padLeft(2, '0')}.${widget.selectedDate.day.toString().padLeft(2, '0')}",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'GyeonggiTitle',
-                  fontSize: 25.sp,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1A6DFF),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              const Text(
-                "오늘 하루는 어땠나요?",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'GyeonggiTitle',
-                  fontSize: 25,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1A6DFF),
-                ),
-              ),
-              SizedBox(height: 30.h),
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE9F0FB),
-                  borderRadius: BorderRadius.circular(10.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.4),
-                      spreadRadius: 2.r,
-                      blurRadius: 8.r,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: 120.h),
-                      child: TextField(
-                        controller: _controller,
-                        keyboardType: TextInputType.multiline,
-                        maxLines: null,
-                        maxLength: maxLength,
-                        style: TextStyle(
-                          fontFamily: 'GyeonggiTitle',
-                          fontSize: 18.sp,
-                          color: const Color(0xFF626262),
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "오늘의 이야기를 작성해주세요",
-                          hintStyle: TextStyle(
-                            fontFamily: 'GyeonggiTitle',
-                            fontSize: 15.sp,
-                            color: const Color(0xFF999999),
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(15.r),
                           ),
-                          border: InputBorder.none,
-                          counterText: "",
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    if (_selectedImage != null)
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8.r),
-                            child: _buildImageWidget(),
-                          ),
-                          Positioned(
-                            top: -8.h,
-                            right: -8.w,
-                            child: GestureDetector(
-                              onTap: () => setState(() {
-                                _selectedImage = null;
-                              }),
-                              child: const CircleAvatar(
-                                radius: 12,
-                                backgroundColor: Colors.red,
-                                child: Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
+                          child: Container(
+                            height: 56.h,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF99BEF7),
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(15.r),
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '나가기',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Pretendard',
+                                fontSize: 18.sp,
                               ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    SizedBox(
-                      height: 30.h,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            onPressed: () => _pickImage(ImageSource.gallery),
-                            icon: const Icon(
-                              Icons.image,
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.of(
+                              context,
+                            ).pop(false); // false 반환 → 계속 작성
+                          },
+                          borderRadius: BorderRadius.only(
+                            bottomRight: Radius.circular(15.r),
+                          ),
+                          child: Container(
+                            height: 56.h,
+                            decoration: BoxDecoration(
                               color: Color(0xFF5A9AFF),
+                              borderRadius: BorderRadius.only(
+                                bottomRight: Radius.circular(15.r),
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '계속 작성하기',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Pretendard',
+                                fontSize: 18.sp,
+                              ),
                             ),
                           ),
-                          IconButton(
-                            onPressed: () => _pickImage(ImageSource.camera),
-                            icon: const Icon(
-                              Icons.camera_alt,
-                              color: Color(0xFF5A9AFF),
-                            ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ) ??
+        false; // null이면 false 반환
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        // 새 일기든 수정이든 상관없이 항상 팝업 띄우기
+        bool exit = await _showExitDialog();
+        return exit; // true면 뒤로가기, false면 계속 작성
+      },
+
+      child: Scaffold(
+        appBar: AppBar(
+          scrolledUnderElevation: 0,
+          centerTitle: true,
+          backgroundColor: Colors.white,
+
+          title: SizedBox(height: 60.h, child: Image.asset('assets/cloud.png')),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(5.0),
+            child: Divider(color: Color(0xFFEEEEEE), thickness: 5),
+          ),
+          elevation: 0.0,
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(30.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  "${widget.selectedDate.year}.${widget.selectedDate.month.toString().padLeft(2, '0')}.${widget.selectedDate.day.toString().padLeft(2, '0')}",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'GyeonggiTitle',
+                    fontSize: 25.sp,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1A6DFF),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                const Text(
+                  "오늘 하루는 어땠나요?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'GyeonggiTitle',
+                    fontSize: 25,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1A6DFF),
+                  ),
+                ),
+                SizedBox(height: 30.h),
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE9F0FB),
+                    borderRadius: BorderRadius.circular(10.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.4),
+                        spreadRadius: 2.r,
+                        blurRadius: 8.r,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: 120.h),
+                        child: TextField(
+                          controller: _controller,
+                          keyboardType: TextInputType.multiline,
+                          maxLines: null,
+                          maxLength: maxLength,
+                          style: TextStyle(
+                            fontFamily: 'GyeonggiTitle',
+                            fontSize: 18.sp,
+                            color: const Color(0xFF626262),
                           ),
-                          const Spacer(),
-                          SizedBox(
-                            width: 100.w,
-                            height: 30.h,
-                            child: Stack(
-                              children: [
-                                Positioned(
-                                  top: 10.h,
-                                  right: 10.w,
-                                  child: Text(
-                                    "${_controller.text.length}/$maxLength",
-                                    style: TextStyle(
-                                      fontFamily: 'Pretendard',
-                                      fontSize: 14.sp,
-                                      color: const Color(0xFFA7A7A7),
-                                    ),
+                          decoration: InputDecoration(
+                            hintText: "오늘의 이야기를 작성해주세요",
+                            hintStyle: TextStyle(
+                              fontFamily: 'GyeonggiTitle',
+                              fontSize: 15.sp,
+                              color: const Color(0xFF999999),
+                            ),
+                            border: InputBorder.none,
+                            counterText: "",
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      if (_selectedImage != null)
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8.r),
+                              child: _buildImageWidget(),
+                            ),
+                            Positioned(
+                              top: -8.h,
+                              right: -8.w,
+                              child: GestureDetector(
+                                onTap: () => setState(() {
+                                  _selectedImage = null;
+                                }),
+                                child: const CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: Colors.red,
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
+                          ],
+                        ),
+                      SizedBox(
+                        height: 30.h,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              onPressed: () => _pickImage(ImageSource.gallery),
+                              icon: const Icon(
+                                Icons.image,
+                                color: Color(0xFF5A9AFF),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => _pickImage(ImageSource.camera),
+                              icon: const Icon(
+                                Icons.camera_alt,
+                                color: Color(0xFF5A9AFF),
+                              ),
+                            ),
+                            const Spacer(),
+                            SizedBox(
+                              width: 100.w,
+                              height: 30.h,
+                              child: Stack(
+                                children: [
+                                  Positioned(
+                                    top: 10.h,
+                                    right: 10.w,
+                                    child: Text(
+                                      "${_controller.text.length}/$maxLength",
+                                      style: TextStyle(
+                                        fontFamily: 'Pretendard',
+                                        fontSize: 14.sp,
+                                        color: const Color(0xFFA7A7A7),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 30.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 20.w),
+                        child: ElevatedButton(
+                          child: Text("취소", style: TextStyle(fontSize: 18.sp)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF5A9AFF),
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 10.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            elevation: 6,
+                            shadowColor: Colors.black.withOpacity(0.5),
                           ),
-                        ],
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 35.w),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 20.w),
+                        child: ElevatedButton(
+                          child: Text("저장", style: TextStyle(fontSize: 18.sp)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF5A9AFF),
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 10.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            elevation: 6,
+                            shadowColor: Colors.black.withOpacity(0.5),
+                          ),
+                          onPressed:
+                              _isSaving // << 요청 중이면 버튼 비활성화
+                              ? null
+                              : () async {
+                                  setState(
+                                    () => _isSaving = true,
+                                  ); // 버튼 즉시 비활성화
+
+                                  await _showAnalyzingDialog();
+
+                                  try {
+                                    await _saveDiary(); // 서버 요청
+                                  } catch (e) {
+                                    print("❌ 저장 중 에러 발생: $e");
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text("일기 저장 중 오류 발생: $e"),
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted)
+                                      setState(
+                                        () => _isSaving = false,
+                                      ); // 요청 끝나면 버튼 다시 활성화
+                                  }
+                                },
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              SizedBox(height: 30.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 20.w),
-                      child: ElevatedButton(
-                        child: Text("취소", style: TextStyle(fontSize: 18.sp)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5A9AFF),
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 10.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.r),
-                          ),
-                          elevation: 6,
-                          shadowColor: Colors.black.withOpacity(0.5),
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 35.w),
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(right: 20.w),
-                      child: ElevatedButton(
-                        child: Text("저장", style: TextStyle(fontSize: 18.sp)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5A9AFF),
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 10.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.r),
-                          ),
-                          elevation: 6,
-                          shadowColor: Colors.black.withOpacity(0.5),
-                        ),
-                        onPressed: () async {
-                          await _showAnalyzingDialog();
-                          await _saveDiary();
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
