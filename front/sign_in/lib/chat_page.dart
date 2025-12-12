@@ -38,17 +38,29 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> fetchAnswer() async {
     setState(() => isLoading = true);
-    final fetched = await chatService.fetchAnswer(widget.questionId, "read");
 
-    setState(() {
+    try {
+      final fetched = await chatService
+          .fetchAnswer(widget.questionId, "read")
+          .timeout(Duration(seconds: 5));
+
       answerText = fetched ?? '';
-      isLoading = false;
-      if (answerText != null && answerText!.isNotEmpty) {
-        currentMode = "read";
-      } else {
+
+      setState(() {
+        // 서버에서 답이 오면 read, 없으면 write
+        currentMode = answerText!.isNotEmpty ? "read" : "write";
+        isLoading = false;
+      });
+    } catch (e) {
+      print("⚠️ 서버 응답 없음 → 작성 모드로 전환");
+
+      // 서버 실패 시: 작성 가능해야 함
+      setState(() {
         currentMode = "write";
-      }
-    });
+        answerText = '';
+        isLoading = false;
+      });
+    }
   }
 
   void _showModifySuccessDialog(BuildContext context) {

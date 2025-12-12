@@ -10,14 +10,16 @@ class DiaryDetailPage extends StatefulWidget {
   final String diaryId;
   final VoidCallback onDelete;
   final Function(DiaryEntryDetail)? onUpdate;
-  final bool isNewWrite; // 수정: 새 글 작성 여부 확인 변수
+  final bool isNewWrite;
+  final File? initialLocalImage;
 
   const DiaryDetailPage({
     super.key,
     required this.diaryId,
     required this.onDelete,
     this.onUpdate,
-    this.isNewWrite = false, // 수정: 기본값 false
+    this.isNewWrite = false,
+    this.initialLocalImage,
   });
 
   @override
@@ -47,6 +49,11 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
     try {
       final data = await _diaryService.getDiaryById(widget.diaryId);
       final entry = DiaryEntryDetail.fromJson(data);
+
+      // 서버에서 받은 entry + local 이미지 덮어쓰기
+      if (widget.initialLocalImage != null) {
+        entry.localImageFile = widget.initialLocalImage;
+      }
 
       setState(() {
         _entry = entry;

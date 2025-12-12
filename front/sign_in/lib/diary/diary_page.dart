@@ -461,13 +461,6 @@ class _DiaryPageState extends State<DiaryPage> {
                                 color: Color(0xFF5A9AFF),
                               ),
                             ),
-                            IconButton(
-                              onPressed: () => _pickImage(ImageSource.camera),
-                              icon: const Icon(
-                                Icons.camera_alt,
-                                color: Color(0xFF5A9AFF),
-                              ),
-                            ),
                             const Spacer(),
                             SizedBox(
                               width: 100.w,
